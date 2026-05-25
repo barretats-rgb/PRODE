@@ -138,6 +138,91 @@
     font-weight:700;
   }
   .footer-meta b{ color:var(--neon-citrus); }
+
+  /* real app shell */
+  .brand-strip,.footer-meta{ display:none; }
+  .app-shell{
+    min-height:100vh;
+    display:grid;
+    grid-template-columns:260px minmax(0,1fr);
+  }
+  .app-sidebar{
+    position:sticky; top:0; height:100vh;
+    background:rgba(22,21,19,0.94);
+    border-right:1px solid var(--char-700);
+    padding:24px 16px;
+    display:flex; flex-direction:column; gap:18px;
+  }
+  .app-brand{ display:flex; align-items:center; gap:12px; padding:0 8px 10px; }
+  .app-logo{
+    font-family:var(--font-display); font-size:28px; line-height:0.85;
+    text-transform:uppercase; color:var(--orange-500);
+  }
+  .app-logo span{ padding-left:0.55em; display:inline-block; color:var(--cream-100); }
+  .app-brand-meta{
+    font-size:10px; letter-spacing:0.2em; text-transform:uppercase;
+    color:var(--char-400); font-weight:700; line-height:1.45;
+  }
+  .app-nav{ display:flex; flex-direction:column; gap:6px; }
+  .app-nav button{
+    width:100%; min-height:42px;
+    display:flex; align-items:center; gap:11px;
+    padding:10px 12px; border-radius:10px; cursor:pointer;
+    background:transparent; border:1px solid transparent;
+    color:var(--char-200); font-weight:700;
+    font-size:11px; letter-spacing:0.14em; text-transform:uppercase;
+    text-align:left;
+  }
+  .app-nav button.on{
+    background:var(--char-700); color:var(--cream-100);
+    border-color:var(--neon-citrus);
+  }
+  .app-nav button.admin.on{ border-color:var(--orange-500); }
+  .app-nav i{ width:16px; height:16px; flex-shrink:0; }
+  .app-side-card{
+    margin-top:auto; padding:12px; border-radius:12px;
+    background:var(--char-900); border:1px solid var(--char-700);
+  }
+  .app-main{
+    min-width:0; min-height:100vh;
+    display:flex; justify-content:center;
+    padding:28px 28px 48px;
+  }
+  .app-content{
+    width:100%; max-width:760px;
+    background:rgba(26,25,22,0.72);
+    border:1px solid var(--char-700);
+    min-height:calc(100vh - 76px);
+    overflow:hidden;
+    border-radius:18px;
+  }
+  .app-content.wide{ max-width:1180px; }
+  .mobile-bottom-nav{ display:none; }
+
+  @media (max-width: 860px){
+    .app-shell{ display:block; min-height:100vh; }
+    .app-sidebar{ display:none; }
+    .app-main{ display:block; padding:0 0 84px; min-height:100vh; }
+    .app-content,.app-content.wide{
+      max-width:none; min-height:100vh; border:0; border-radius:0; background:var(--char-900);
+    }
+    .mobile-bottom-nav{
+      position:fixed; left:10px; right:10px; bottom:10px; z-index:100;
+      display:flex; gap:4px; padding:5px;
+      border-radius:999px; background:rgba(18,17,15,0.96);
+      border:1px solid var(--char-700);
+      box-shadow:0 -12px 30px -14px rgba(0,0,0,.75);
+    }
+    .mobile-bottom-nav button{
+      flex:1; min-width:0; height:54px;
+      border:0; border-radius:999px; cursor:pointer;
+      background:transparent; color:var(--char-200);
+      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+      font-size:8px; letter-spacing:0.14em; text-transform:uppercase; font-weight:700;
+    }
+    .mobile-bottom-nav button.on{ background:var(--orange-500); color:var(--cream-50); }
+    .mobile-bottom-nav i{ width:18px; height:18px; }
+  }
 </style>
 </head>
 <body>
@@ -182,6 +267,7 @@ const SCREENS = {
   specials: { label:"Especiales",   comp:"Specials", tab:"matches" },
   profile:  { label:"Perfil",       comp:"Profile",  tab:"profile" },
   groups:   { label:"Grupos",       comp:"Groups",   tab:"groups"  },
+  admin:    { label:"Admin",        comp:"Admin",    tab:"admin"   },
 };
 
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
@@ -203,9 +289,60 @@ function StatusBar() {
   );
 }
 
+
+const NAV_ITEMS = [
+  { screen:"home",    label:"Home",    icon:"home" },
+  { screen:"matches", label:"Prode",   icon:"goal" },
+  { screen:"ranking", label:"Ranking", icon:"trophy" },
+  { screen:"groups",  label:"Grupos",  icon:"users" },
+  { screen:"profile", label:"Yo",      icon:"user" },
+  { screen:"admin",   label:"Admin",   icon:"settings", admin:true },
+];
+
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(() => window.innerWidth > 860);
+  useEffect(() => {
+    const onResize = () => setIsDesktop(window.innerWidth > 860);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+  return isDesktop;
+}
+
+function AppNav({ screen, go }) {
+  return (
+    <nav className="app-nav">
+      {NAV_ITEMS.map(item => (
+        <button
+          key={item.screen}
+          className={(screen === item.screen ? "on " : "") + (item.admin ? "admin" : "")}
+          onClick={() => go(item.screen)}>
+          <i data-lucide={item.icon}></i>
+          {item.label}
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+function MobileBottomNav({ screen, go }) {
+  const items = NAV_ITEMS.filter(item => item.screen !== "admin");
+  return (
+    <nav className="mobile-bottom-nav">
+      {items.map(item => (
+        <button key={item.screen} className={screen === item.screen ? "on" : ""} onClick={() => go(item.screen)}>
+          <i data-lucide={item.icon}></i>
+          <span>{item.label}</span>
+        </button>
+      ))}
+    </nav>
+  );
+}
+
 function App() {
   const [screen, setScreen] = useState("home");
-  const [tweaks, setTweak] = (window.useTweaks || ((d)=>[d, ()=>{}]))(TWEAK_DEFAULTS);
+  const [tweaks] = (window.useTweaks || ((d)=>[d, ()=>{}]))(TWEAK_DEFAULTS);
+  const isDesktop = useIsDesktop();
 
   useEffect(() => {
     window.ProdeDB?.init();
@@ -213,108 +350,39 @@ function App() {
 
   useEffect(() => {
     if (window.lucide) window.lucide.createIcons();
-  }, [screen, tweaks]);
+  }, [screen, tweaks, isDesktop]);
 
-  const go = (s) => setScreen(s);
-
-  const Cur = window[SCREENS[screen]?.comp];
-  const activeTab = SCREENS[screen]?.tab;
-
-  // when accent tweak changes, swap neon var
   useEffect(() => {
-    const map = {
-      citrus: "#E8F26A",
-      coral:  "#FF7A3D",
-      sage:   "#B6BF93",
-    };
+    const map = { citrus: "#E8F26A", coral: "#FF7A3D", sage: "#B6BF93" };
     document.documentElement.style.setProperty("--neon-citrus", map[tweaks.accent] || map.citrus);
   }, [tweaks.accent]);
 
+  const go = (next) => setScreen(next);
+  const Cur = screen === "admin" && isDesktop ? DesktopAdmin : window[SCREENS[screen]?.comp];
+  const wide = screen === "admin" && isDesktop;
+
   return (
-    <div className="stage">
-      {/* MOBILE PHONE */}
-      <div className="col">
-        <div className="phone">
-          <div className="statusbar">
-            <span>22:47</span>
-            <div className="icons">
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 18h3v-4H2zm5 0h3V10H7zm5 0h3V6h-3zm5 0h3V2h-3z"/></svg>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M2 9a15 15 0 0120 0"/><path d="M5 12.5a10 10 0 0114 0"/><path d="M8.5 16a5 5 0 017 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor"/></svg>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="7" width="18" height="10" rx="2"/><rect x="4" y="9" width="13" height="6" rx="1" fill="currentColor"/><rect x="21" y="10" width="1.5" height="4" fill="currentColor"/></svg>
-            </div>
-          </div>
-          <div className="viewport" key={screen}>
-            {Cur ? <Cur go={go} tweaks={tweaks}/> : <div style={{padding:24, color:"#fff"}}>Loading…</div>}
-            {activeTab && <TabBar active={activeTab} onChange={(id)=>{
-              if (id==="home") go("home");
-              else if (id==="matches") go("matches");
-              else if (id==="ranking") go("ranking");
-              else if (id==="groups") go("groups");
-              else if (id==="profile") go("profile");
-            }}/>}
-          </div>
+    <div className="app-shell">
+      <aside className="app-sidebar">
+        <div className="app-brand">
+          <div className="app-logo">REFU<br/><span>GIO</span></div>
+          <div className="app-brand-meta">Prode Mundial '26<br/>Tamarindo</div>
         </div>
-        <div className="screenNav">
-          {Object.keys(SCREENS).map(k => (
-            <button key={k} className={screen===k?"on":""} onClick={()=>setScreen(k)}>
-              {SCREENS[k].label}
-            </button>
-          ))}
-          {tweaks.showAdmin && (
-            <button className={"admin " + (screen==="admin"?"on":"")} onClick={()=>setScreen("admin")}>
-              ★ Admin
-            </button>
-          )}
+        <AppNav screen={screen} go={go}/>
+        <div className="app-side-card">
+          <Eyebrow color="var(--neon-citrus)">Estado</Eyebrow>
+          <div style={{fontFamily:"var(--font-title)",fontSize:18,color:"var(--cream-100)",textTransform:"uppercase",marginTop:5}}>247 jugadores</div>
+          <div style={{fontSize:11,color:"var(--char-400)",marginTop:4}}>Predicciones abiertas para la fase de grupos.</div>
         </div>
-        <div className="col-label">Prode Refugio · <b>iPhone 14 Pro</b></div>
-      </div>
+      </aside>
 
-      {/* DESKTOP ADMIN PREVIEW */}
-      {tweaks.showAdmin && (
-        <div className="col" style={{display: screen === "admin" ? "flex" : "none"}}>
-          <div className="desktop">
-            <div className="desktop-titlebar">
-              <span className="dot r"></span><span className="dot y"></span><span className="dot g"></span>
-              <span className="desktop-url">refugio.cr/prode/admin</span>
-            </div>
-            <div className="desktop-body">
-              <DesktopAdmin/>
-            </div>
-          </div>
-          <div className="col-label">Panel Refugio · <b>Desktop staff</b></div>
+      <main className="app-main">
+        <div className={"app-content " + (wide ? "wide" : "")}>
+          {Cur ? <Cur go={go} tweaks={tweaks}/> : <div style={{padding:24}}>Cargando...</div>}
         </div>
-      )}
+      </main>
 
-      {window.TweaksPanel && (
-        <window.TweaksPanel title="Tweaks">
-          <window.TweakSection label="Acento">
-            <window.TweakRadio
-              label="Color de energía"
-              value={tweaks.accent}
-              onChange={v=>setTweak("accent", v)}
-              options={[
-                {value:"citrus", label:"Citrus"},
-                {value:"coral",  label:"Coral"},
-                {value:"sage",   label:"Sage"},
-              ]}
-            />
-          </window.TweakSection>
-          <window.TweakSection label="Vistas">
-            <window.TweakToggle
-              label="Mostrar panel Admin"
-              value={tweaks.showAdmin}
-              onChange={v=>setTweak("showAdmin", v)}
-            />
-          </window.TweakSection>
-          <window.TweakSection label="Copy">
-            <window.TweakText
-              label="Frase de marca"
-              value={tweaks.phrase}
-              onChange={v=>setTweak("phrase", v)}
-            />
-          </window.TweakSection>
-        </window.TweaksPanel>
-      )}
+      <MobileBottomNav screen={screen} go={go}/>
     </div>
   );
 }
