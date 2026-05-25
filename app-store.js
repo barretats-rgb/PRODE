@@ -288,25 +288,9 @@
     return payload;
   }
 
-  function outcome(a, b) {
-    if (a > b) return "a";
-    if (a < b) return "b";
-    return "draw";
-  }
-
+  // El puntaje vive en lib/scoring.js (testeado). Acá sólo se delega.
   function scorePrediction(match, prediction) {
-    if (!match || !prediction || match.status !== "finalizado") return null;
-    const pa = Number(prediction.a);
-    const pb = Number(prediction.b);
-    const ra = Number(match.scoreA);
-    const rb = Number(match.scoreB);
-    if (!Number.isFinite(pa) || !Number.isFinite(pb)) return null;
-    if (pa === ra && pb === rb) return { points: 5, kind: "exacto" };
-    if (outcome(pa, pb) === outcome(ra, rb)) {
-      const diffBonus = Math.abs(pa - pb) === Math.abs(ra - rb) ? 1 : 0;
-      return { points: 3 + diffBonus, kind: diffBonus ? "diferencia" : "ganador" };
-    }
-    return { points: 0, kind: "fallado" };
+    return window.ProdeScoring.scorePrediction(match, prediction);
   }
 
   function calculateStats(predictions = getPredictions()) {
