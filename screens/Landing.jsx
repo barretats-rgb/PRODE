@@ -10,9 +10,13 @@ function Landing({ go }) {
     return () => window.removeEventListener("prode:data", onData);
   }, []);
   const matches = window.ProdeStore?.getMatches?.() || window.MATCHES;
-  const featured = matches.find(m => m.featured && m.status === "abierto") || matches[3];
   const live = matches.find(m => m.status === "vivo");
-  const targetIso = "2026-06-12T18:00:00";
+  // Próximo partido real para la cuenta regresiva: el más cercano que todavía no empezó.
+  const now = Date.now();
+  const upcoming = matches
+    .filter(m => m.kickoffAt && m.status !== "finalizado")
+    .sort((a, b) => Date.parse(a.kickoffAt) - Date.parse(b.kickoffAt));
+  const next = upcoming.find(m => Date.parse(m.kickoffAt) > now) || upcoming[0] || matches[0];
 
   return (
     <div style={{paddingBottom: 24}}>
@@ -138,7 +142,7 @@ function Landing({ go }) {
             fontFamily:"var(--font-title)", fontSize:20, color:"var(--cream-100)",
             textTransform:"uppercase", letterSpacing:"0.02em", margin:"4px 0 14px",
           }}>Poné el resultado<br/>antes de que ruede la pelota.</div>
-          <Countdown target={targetIso} label="Argentina vs Croacia · Vie 18hs"/>
+          <Countdown target={next.kickoffAt} label={`${window.TEAMS[next.a]} vs ${window.TEAMS[next.b]} · ${next.date} ${next.time}hs`}/>
           <Btn full variant="primary" size="md" style={{marginTop:14}} onClick={()=>go("matches")} icon="arrow-right">
             Cargar predicciones
           </Btn>
