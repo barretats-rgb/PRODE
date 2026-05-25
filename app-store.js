@@ -108,6 +108,8 @@
   }
 
   function getPlayer() {
+    const dbPlayer = window.ProdeDB?.getPlayer?.();
+    if (dbPlayer) return dbPlayer;
     const saved = readJson(PLAYER_KEY, null);
     if (saved) return saved;
     return {
@@ -124,6 +126,14 @@
   }
 
   async function savePlayer(player) {
+    if (window.ProdeDB?.getUser?.()) {
+      // Con sesión, ProdeDB es la fuente de verdad (escribe en Firestore + state.player).
+      return window.ProdeDB.savePlayer({
+        ...player,
+        avatar: player.avatar || initials(player.name),
+      });
+    }
+    // Sin sesión: comportamiento local previo.
     const payload = {
       ...getPlayer(),
       ...player,
@@ -132,11 +142,6 @@
       updatedAt: new Date().toISOString(),
     };
     writeJson(PLAYER_KEY, payload);
-    try {
-      await window.ProdeDB?.savePlayer(payload);
-    } catch (error) {
-      console.warn("[Prode Refugio] Perfil guardado localmente.", error);
-    }
     return payload;
   }
 

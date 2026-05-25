@@ -36,10 +36,11 @@ function useIsDesktop() {
   return isDesktop;
 }
 
-function AppNav({ screen, go }) {
+function AppNav({ screen, go, isAdmin }) {
+  const items = NAV_ITEMS.filter(item => !item.admin || isAdmin);
   return (
     <nav className="app-nav">
-      {NAV_ITEMS.map(item => (
+      {items.map(item => (
         <button
           key={item.screen}
           className={(screen === item.screen ? "on " : "") + (item.admin ? "admin" : "")}
@@ -52,8 +53,8 @@ function AppNav({ screen, go }) {
   );
 }
 
-function MobileBottomNav({ screen, go }) {
-  const items = NAV_ITEMS.filter(item => item.screen !== "admin");
+function MobileBottomNav({ screen, go, isAdmin }) {
+  const items = NAV_ITEMS.filter(item => item.screen !== "admin" || isAdmin);
   return (
     <nav className="mobile-bottom-nav">
       {items.map(item => (

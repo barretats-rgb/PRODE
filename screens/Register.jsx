@@ -5,7 +5,7 @@
 function Register({ go }) {
   const savedPlayer = window.ProdeStore?.getPlayer?.() || {};
   const [step, setStep] = useState(0);
-  const [name, setName] = useState(savedPlayer.name || "");
+  const [name, setName] = useState(savedPlayer.name || window.ProdeDB?.getUser?.()?.displayName || "");
   const [phone, setPhone] = useState(savedPlayer.phone || "");
   const [team, setTeam] = useState(savedPlayer.favoriteTeam || "CRC");
   const [avatar, setAvatar] = useState(2);
