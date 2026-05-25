@@ -70,14 +70,18 @@ function App() {
   const [screen, setScreen] = useState("home");
   const [tweaks] = (window.useTweaks || ((d)=>[d, ()=>{}]))(TWEAK_DEFAULTS);
   const isDesktop = useIsDesktop();
+  // Estado de sesión: undefined = cargando, null = sin sesión, objeto = sesión activa.
+  const [auth, setAuth] = useState(undefined);
 
   useEffect(() => {
     window.ProdeDB?.init();
+    const unsub = window.ProdeDB?.onAuthChange?.((s) => setAuth(s));
+    return () => unsub && unsub();
   }, []);
 
   useEffect(() => {
     if (window.lucide) window.lucide.createIcons();
-  }, [screen, tweaks, isDesktop]);
+  }, [screen, tweaks, isDesktop, auth]);
 
   useEffect(() => {
     const map = { citrus: "#E8F26A", coral: "#FF7A3D", sage: "#B6BF93" };
@@ -85,6 +89,32 @@ function App() {
   }, [tweaks.accent]);
 
   const go = (next) => setScreen(next);
+
+  // GATE 1: cargando, mientras se resuelve la sesión (evita parpadear el home antes del Login).
+  // onAuthChange emite el estado actual al suscribir, así que esto dura ~1 frame.
+  if (auth === undefined && window.ProdeDB) {
+    return <div style={{minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--char-400)"}}>Cargando...</div>;
+  }
+
+  // GATE 2: sin sesión → Login (sólo si Firebase está configurado; sin config, modo local sigue).
+  if (window.ProdeDB?.isReady?.() && (!auth || !auth.user)) {
+    return <Login/>;
+  }
+
+  // GATE 3: con sesión pero sin equipo favorito → completar perfil.
+  if (auth?.user && auth.player && !auth.player.favoriteTeam) {
+    return (
+      <div className="app-shell">
+        <main className="app-main">
+          <div className="app-content">
+            <Register go={go}/>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  const isAdmin = !!auth?.isAdmin;
   const Cur = screen === "admin" && isDesktop ? DesktopAdmin : window[SCREENS[screen]?.comp];
   const wide = screen === "admin" && isDesktop;
 
@@ -95,7 +125,7 @@ function App() {
           <div className="app-logo">REFU<br/><span>GIO</span></div>
           <div className="app-brand-meta">Prode Mundial '26<br/>Tamarindo</div>
         </div>
-        <AppNav screen={screen} go={go}/>
+        <AppNav screen={screen} go={go} isAdmin={isAdmin}/>
         <div className="app-side-card">
           <Eyebrow color="var(--neon-citrus)">Estado</Eyebrow>
           <div style={{fontFamily:"var(--font-title)",fontSize:18,color:"var(--cream-100)",textTransform:"uppercase",marginTop:5}}>247 jugadores</div>
@@ -109,7 +139,7 @@ function App() {
         </div>
       </main>
 
-      <MobileBottomNav screen={screen} go={go}/>
+      <MobileBottomNav screen={screen} go={go} isAdmin={isAdmin}/>
     </div>
   );
 }
