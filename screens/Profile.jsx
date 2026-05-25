@@ -163,8 +163,10 @@ function Profile({ go }) {
 
       <div style={{padding:"22px 16px 0", display:"flex", gap:8}}>
         <Btn variant="ghost" size="md" icon="edit-3" style={{flex:1}} onClick={()=>go("register")}>Editar</Btn>
-        <Btn variant="ghost" size="md" icon="log-out" style={{flex:1}} onClick={()=>{
+        <Btn variant="ghost" size="md" icon="log-out" style={{flex:1}} onClick={async ()=>{
           window.ProdeStore?.clearPlayer?.();
+          // Cierra la sesión de Firebase; el gate de App enruta de vuelta al Login.
+          await window.ProdeDB?.signOutUser?.();
           go("register");
         }}>Salir</Btn>
       </div>
