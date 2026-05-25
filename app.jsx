@@ -54,7 +54,7 @@ function AppNav({ screen, go, isAdmin }) {
 }
 
 function MobileBottomNav({ screen, go, isAdmin }) {
-  const items = NAV_ITEMS.filter(item => item.screen !== "admin" || isAdmin);
+  const items = NAV_ITEMS.filter(item => !item.admin || isAdmin);
   return (
     <nav className="mobile-bottom-nav">
       {items.map(item => (

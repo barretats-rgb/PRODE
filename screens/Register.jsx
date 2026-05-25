@@ -12,26 +12,33 @@ function Register({ go }) {
   const [mode, setMode] = useState(savedPlayer.mode || "solo"); // solo | create | join
   const [groupName, setGroupName] = useState(savedPlayer.groupName || "La Mesa del Imperial");
   const [code, setCode] = useState(savedPlayer.groupCode || "");
+  const [saveError, setSaveError] = useState("");
 
   const avatars = ["orange","citrus","sage","tan","olive","char"];
   const favs = ["ARG","CRC","BRA","URU","MEX","COL","ESP","FRA","ENG","USA","GER","ITA"];
   const initials = name.split(" ").map(w=>w[0]).slice(0,2).join("") || "??";
 
   const finishRegistration = async () => {
-    await window.ProdeStore?.savePlayer({
-      name,
-      phone,
-      favoriteTeam: team,
-      avatarTone: avatars[avatar],
-      avatar: initials,
-      mode,
-      groupName: mode === "create" ? groupName : "",
-      groupCode: mode === "join" ? code : "",
-      points: 0,
-      exact: 0,
-      winner: 0,
-    });
-    go("matches");
+    setSaveError("");
+    try {
+      await window.ProdeStore?.savePlayer({
+        name,
+        phone,
+        favoriteTeam: team,
+        avatarTone: avatars[avatar],
+        avatar: initials,
+        mode,
+        groupName: mode === "create" ? groupName : "",
+        groupCode: mode === "join" ? code : "",
+        points: 0,
+        exact: 0,
+        winner: 0,
+      });
+      go("matches");
+    } catch (e) {
+      console.error("[Prode Refugio] guardar perfil", e);
+      setSaveError("No se pudo guardar tu perfil. Revisá la conexión y probá de nuevo.");
+    }
   };
 
   return (
@@ -165,6 +172,7 @@ function Register({ go }) {
               Empezar
             </Btn>
           </div>
+          {saveError && <div style={{color:"var(--neon-coral)", fontSize:12, marginTop:10, textAlign:"center"}}>{saveError}</div>}
 
           <div style={{
             marginTop:18, padding:"12px 14px", borderRadius:14,

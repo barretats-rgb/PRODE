@@ -128,10 +128,11 @@
   async function savePlayer(player) {
     if (window.ProdeDB?.getUser?.()) {
       // Con sesión, ProdeDB es la fuente de verdad (escribe en Firestore + state.player).
-      return window.ProdeDB.savePlayer({
+      await window.ProdeDB.savePlayer({
         ...player,
         avatar: player.avatar || initials(player.name),
       });
+      return window.ProdeDB.getPlayer(); // ambos caminos devuelven el objeto jugador
     }
     // Sin sesión: comportamiento local previo.
     const payload = {
