@@ -22,6 +22,10 @@
       : new Date().toISOString();
   }
 
+  function localNow() {
+    return new Date().toISOString();
+  }
+
   function isAdmin() {
     return !!(state.user && window.ProdeAdmins?.isAdminEmail(state.user.email, window.PRODE_ADMINS || []));
   }
@@ -61,7 +65,9 @@
       updatedAt: firestoreNow(),
     };
     await ref.set(fresh, { merge: true });
-    state.player = { id: user.uid, ...fresh };
+    // En memoria guardamos timestamps reales (ISO); el sentinel serverTimestamp() va sólo a Firestore.
+    const iso = localNow();
+    state.player = { id: user.uid, ...fresh, createdAt: iso, updatedAt: iso };
     return state.player;
   }
 
@@ -76,6 +82,8 @@
     state.db = window.firebase.firestore();
     state.auth = window.firebase.auth();
     state.ready = true;
+    // Tras ready, onAuthStateChanged resuelve la sesión async; el estado transitorio
+    // "ready && user:null" es esperado y lo maneja el gate de la UI (muestra Login).
 
     state.auth.onAuthStateChanged(async (user) => {
       if (user) {
@@ -121,7 +129,7 @@
       return { offline: true };
     }
     await collection("players").doc(id).set({ ...patch, updatedAt: firestoreNow() }, { merge: true });
-    state.player = { ...(state.player || {}), ...patch, id };
+    state.player = { ...(state.player || {}), ...patch, id, updatedAt: localNow() };
     notify();
     return { offline: false };
   }
@@ -175,7 +183,6 @@
     getUser: () => state.user,
     getPlayer: () => state.player,
     currentPlayerId,
-    ensurePlayer,
     savePlayer,
     savePrediction,
     saveSpecials,
