@@ -4,13 +4,19 @@
 
 function Matches({ go }) {
   const [filter, setFilter] = useState("todos"); // todos | hoy | abiertos | mios
-  const [preds, setPreds] = useState({ ...window.MY_PREDICTIONS });
+  const [preds, setPreds] = useState(window.ProdeStore?.getPredictions?.() || { ...window.MY_PREDICTIONS });
   const [toast, setToast] = useState(null);
 
-  const setPred = (id, val) => {
+  useEffect(() => {
+    const onData = () => setPreds(window.ProdeStore?.getPredictions?.() || { ...window.MY_PREDICTIONS });
+    window.addEventListener("prode:data", onData);
+    return () => window.removeEventListener("prode:data", onData);
+  }, []);
+
+  const setPred = async (id, val) => {
     setPreds(p => ({ ...p, [id]: val }));
     setToast("Guardado");
-    window.ProdeDB?.savePrediction(id, val).catch((error) => {
+    window.ProdeStore?.savePrediction(id, val).catch((error) => {
       console.warn("[Prode Refugio] No se pudo guardar la prediccion.", error);
       setToast("Guardado local");
     });

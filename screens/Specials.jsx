@@ -3,10 +3,10 @@
    ============================================================ */
 
 function Specials({ go }) {
-  const [sp, setSp] = useState({...window.MY_SPECIALS});
+  const [sp, setSp] = useState(window.ProdeStore?.getSpecials?.() || {...window.MY_SPECIALS});
 
   const saveAndClose = async () => {
-    await window.ProdeDB?.saveSpecials(sp);
+    await window.ProdeStore?.saveSpecials(sp);
     go("matches");
   };
 

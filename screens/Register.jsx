@@ -3,21 +3,22 @@
    ============================================================ */
 
 function Register({ go }) {
+  const savedPlayer = window.ProdeStore?.getPlayer?.() || {};
   const [step, setStep] = useState(0);
-  const [name, setName] = useState("Tomás Belaún");
-  const [phone, setPhone] = useState("+506 8421 9930");
-  const [team, setTeam] = useState("ARG");
+  const [name, setName] = useState(savedPlayer.name || "");
+  const [phone, setPhone] = useState(savedPlayer.phone || "");
+  const [team, setTeam] = useState(savedPlayer.favoriteTeam || "CRC");
   const [avatar, setAvatar] = useState(2);
-  const [mode, setMode] = useState("solo"); // solo | create | join
-  const [groupName, setGroupName] = useState("La Mesa del Imperial");
-  const [code, setCode] = useState("");
+  const [mode, setMode] = useState(savedPlayer.mode || "solo"); // solo | create | join
+  const [groupName, setGroupName] = useState(savedPlayer.groupName || "La Mesa del Imperial");
+  const [code, setCode] = useState(savedPlayer.groupCode || "");
 
   const avatars = ["orange","citrus","sage","tan","olive","char"];
   const favs = ["ARG","CRC","BRA","URU","MEX","COL","ESP","FRA","ENG","USA","GER","ITA"];
   const initials = name.split(" ").map(w=>w[0]).slice(0,2).join("") || "??";
 
   const finishRegistration = async () => {
-    await window.ProdeDB?.savePlayer({
+    await window.ProdeStore?.savePlayer({
       name,
       phone,
       favoriteTeam: team,

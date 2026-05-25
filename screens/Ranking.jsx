@@ -5,8 +5,15 @@
 function Ranking({ go }) {
   const [scope, setScope] = useState("general"); // general | grupo | staff
   const [highlight, setHighlight] = useState(null);
+  const [version, setVersion] = useState(0);
 
-  const rows = window.RANKING;
+  useEffect(() => {
+    const onData = () => setVersion(v => v + 1);
+    window.addEventListener("prode:data", onData);
+    return () => window.removeEventListener("prode:data", onData);
+  }, []);
+
+  const rows = window.ProdeStore?.getRanking?.() || window.RANKING;
   const you = rows.find(r => r.you);
   const podium = rows.slice(0,3);
   const rest = rows.slice(3);
