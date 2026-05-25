@@ -7,10 +7,10 @@
    ============================================================ */
 
 window.FIREBASE_CONFIG = {
-  apiKey: "PEGAR_API_KEY",
-  authDomain: "PEGAR_AUTH_DOMAIN",
-  projectId: "PEGAR_PROJECT_ID",
-  storageBucket: "PEGAR_STORAGE_BUCKET",
-  messagingSenderId: "PEGAR_MESSAGING_SENDER_ID",
-  appId: "PEGAR_APP_ID",
+  apiKey: "AIzaSyBJvyhQ7qpAIC5MyZcZIQzDgmj3YYvOCeo",
+  authDomain: "prode-ee447.firebaseapp.com",
+  projectId: "prode-ee447",
+  storageBucket: "prode-ee447.firebasestorage.app",
+  messagingSenderId: "337362377841",
+  appId: "1:337362377841:web:42d3130acfbcb21365cfd0",
 };
