@@ -6,22 +6,14 @@
 function Admin({ go }) {
   const [tab, setTab] = useState("partidos");
   const [matches, setMatches] = useState(window.ProdeStore?.getMatches?.() || window.MATCHES);
-  const [liveStatus, setLiveStatus] = useState(window.ProdeStore?.getLiveStatus?.());
 
   useEffect(() => {
     const onData = () => {
       setMatches(window.ProdeStore?.getMatches?.() || window.MATCHES);
-      setLiveStatus(window.ProdeStore?.getLiveStatus?.());
     };
     window.addEventListener("prode:data", onData);
     return () => window.removeEventListener("prode:data", onData);
   }, []);
-
-  const syncLive = async () => {
-    const status = await window.ProdeStore?.syncLiveMatches?.();
-    setMatches(window.ProdeStore?.getMatches?.() || window.MATCHES);
-    setLiveStatus(status);
-  };
 
   const updateScore = (id, side, val) => {
     setMatches(ms => ms.map(m => m.id === id ? {...m, [side]:val, status:"finalizado"} : m));
@@ -85,14 +77,14 @@ function Admin({ go }) {
           background:"var(--char-800)", border:"1px solid var(--char-700)",
           display:"flex", alignItems:"center", gap:10,
         }}>
-          <i data-lucide="radio" style={{width:18,height:18,color:"var(--neon-citrus)"}}></i>
+          <i data-lucide="pencil-line" style={{width:18,height:18,color:"var(--neon-citrus)"}}></i>
           <div style={{flex:1}}>
-            <div style={{fontSize:12, color:"var(--cream-100)", fontWeight:700}}>API-Football live</div>
+            <div style={{fontSize:12, color:"var(--cream-100)", fontWeight:700}}>Resultados manuales</div>
             <div style={{fontSize:10, color:"var(--char-400)", marginTop:3}}>
-              {liveStatus?.message || "Sin sincronizar todavia."}
+              Carga marcadores desde la pestana Resultados y el ranking se recalcula solo.
             </div>
           </div>
-          <Btn variant="accent" size="sm" icon="refresh-cw" onClick={syncLive}>Sync</Btn>
+          <Pill tone="open">MANUAL</Pill>
         </div>
       </div>
 
@@ -145,9 +137,9 @@ function Admin({ go }) {
             <div style={{flex:1}}>
               <div style={{
                 fontFamily:"var(--font-body)", fontSize:12, color:"var(--cream-100)", fontWeight:700,
-              }}>Cierre automático</div>
+              }}>Modo manual</div>
               <div style={{fontSize:10, color:"var(--char-400)", marginTop:3}}>
-                Los partidos se cierran al pitazo inicial.
+                Los resultados se cargan desde Admin.
               </div>
             </div>
             <ToggleSwitch on/>
@@ -161,24 +153,9 @@ function Admin({ go }) {
           <h3 style={{
             fontFamily:"var(--font-title)", fontSize:20, color:"var(--cream-100)",
             textTransform:"uppercase", letterSpacing:"0.02em", margin:"4px 0 14px",
-          }}>Partido en vivo</h3>
-          {matches.filter(m => m.status === "vivo").map(m => (
+          }}>Carga manual</h3>
+          {matches.slice(0, 8).map(m => (
             <ResultCard key={m.id} m={m} onChange={updateScore}/>
-          ))}
-
-          <Eyebrow color="var(--char-200)" style={{marginTop:16}}>Próximos a cargar</Eyebrow>
-          {matches.filter(m => m.status === "abierto").slice(0,3).map(m => (
-            <div key={m.id} style={{
-              marginTop:8, padding:"10px 12px", borderRadius:14,
-              background:"var(--char-800)", border:"1px dashed var(--char-600)",
-              display:"flex", alignItems:"center", gap:10,
-            }}>
-              <Flag code={m.a} size={22}/>
-              <span style={{fontSize:11, color:"var(--cream-100)", fontWeight:700}}>vs</span>
-              <Flag code={m.b} size={22}/>
-              <div style={{flex:1, fontSize:10, color:"var(--char-400)"}}>{m.date} · {m.time}</div>
-              <Pill tone="open">OPEN</Pill>
-            </div>
           ))}
         </div>
       )}
@@ -336,6 +313,13 @@ function KPI({ v, l, delta, tone }) {
 }
 
 function ResultCard({ m, onChange }) {
+  const statusLabel = m.status === "finalizado" ? "FT" : m.status === "vivo" ? `VIVO - ${m.minute}` : "MANUAL";
+  const statusTone = m.status === "finalizado" ? "done" : m.status === "vivo" ? "live" : "open";
+  const saveCurrent = () => {
+    onChange(m.id, "scoreA", Number(m.scoreA || 0));
+    onChange(m.id, "scoreB", Number(m.scoreB || 0));
+  };
+
   return (
     <div style={{
       padding:"14px", borderRadius:18,
@@ -344,7 +328,7 @@ function ResultCard({ m, onChange }) {
     }}>
       <div style={{display:"flex", justifyContent:"space-between", alignItems:"center"}}>
         <Eyebrow color="var(--char-400)">{m.phase}</Eyebrow>
-        <Pill tone="live">VIVO · {m.minute}</Pill>
+        <Pill tone={statusTone}>{statusLabel}</Pill>
       </div>
       <div style={{
         marginTop:12,
@@ -365,8 +349,8 @@ function ResultCard({ m, onChange }) {
         </div>
       </div>
       <div style={{display:"flex", gap:7, marginTop:12}}>
-        <Btn variant="primary" size="sm" icon="check" style={{flex:1}}>Guardar</Btn>
-        <Btn variant="ghost" size="sm" icon="flag" style={{flex:1}}>Finalizar</Btn>
+        <Btn variant="primary" size="sm" icon="check" style={{flex:1}} onClick={saveCurrent}>Guardar</Btn>
+        <Btn variant="ghost" size="sm" icon="flag" style={{flex:1}} onClick={saveCurrent}>Finalizar</Btn>
       </div>
     </div>
   );

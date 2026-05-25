@@ -2787,22 +2787,14 @@ window.Groups = Groups;
 function Admin({ go }) {
   const [tab, setTab] = useState("partidos");
   const [matches, setMatches] = useState(window.ProdeStore?.getMatches?.() || window.MATCHES);
-  const [liveStatus, setLiveStatus] = useState(window.ProdeStore?.getLiveStatus?.());
 
   useEffect(() => {
     const onData = () => {
       setMatches(window.ProdeStore?.getMatches?.() || window.MATCHES);
-      setLiveStatus(window.ProdeStore?.getLiveStatus?.());
     };
     window.addEventListener("prode:data", onData);
     return () => window.removeEventListener("prode:data", onData);
   }, []);
-
-  const syncLive = async () => {
-    const status = await window.ProdeStore?.syncLiveMatches?.();
-    setMatches(window.ProdeStore?.getMatches?.() || window.MATCHES);
-    setLiveStatus(status);
-  };
 
   const updateScore = (id, side, val) => {
     setMatches(ms => ms.map(m => m.id === id ? {...m, [side]:val, status:"finalizado"} : m));
@@ -2866,14 +2858,14 @@ function Admin({ go }) {
           background:"var(--char-800)", border:"1px solid var(--char-700)",
           display:"flex", alignItems:"center", gap:10,
         }}>
-          <i data-lucide="radio" style={{width:18,height:18,color:"var(--neon-citrus)"}}></i>
+          <i data-lucide="pencil-line" style={{width:18,height:18,color:"var(--neon-citrus)"}}></i>
           <div style={{flex:1}}>
-            <div style={{fontSize:12, color:"var(--cream-100)", fontWeight:700}}>API-Football live</div>
+            <div style={{fontSize:12, color:"var(--cream-100)", fontWeight:700}}>Resultados manuales</div>
             <div style={{fontSize:10, color:"var(--char-400)", marginTop:3}}>
-              {liveStatus?.message || "Sin sincronizar todavia."}
+              Carga marcadores desde la pestana Resultados y el ranking se recalcula solo.
             </div>
           </div>
-          <Btn variant="accent" size="sm" icon="refresh-cw" onClick={syncLive}>Sync</Btn>
+          <Pill tone="open">MANUAL</Pill>
         </div>
       </div>
 
@@ -2926,9 +2918,9 @@ function Admin({ go }) {
             <div style={{flex:1}}>
               <div style={{
                 fontFamily:"var(--font-body)", fontSize:12, color:"var(--cream-100)", fontWeight:700,
-              }}>Cierre automático</div>
+              }}>Modo manual</div>
               <div style={{fontSize:10, color:"var(--char-400)", marginTop:3}}>
-                Los partidos se cierran al pitazo inicial.
+                Los resultados se cargan desde Admin.
               </div>
             </div>
             <ToggleSwitch on/>
@@ -2942,24 +2934,9 @@ function Admin({ go }) {
           <h3 style={{
             fontFamily:"var(--font-title)", fontSize:20, color:"var(--cream-100)",
             textTransform:"uppercase", letterSpacing:"0.02em", margin:"4px 0 14px",
-          }}>Partido en vivo</h3>
-          {matches.filter(m => m.status === "vivo").map(m => (
+          }}>Carga manual</h3>
+          {matches.slice(0, 8).map(m => (
             <ResultCard key={m.id} m={m} onChange={updateScore}/>
-          ))}
-
-          <Eyebrow color="var(--char-200)" style={{marginTop:16}}>Próximos a cargar</Eyebrow>
-          {matches.filter(m => m.status === "abierto").slice(0,3).map(m => (
-            <div key={m.id} style={{
-              marginTop:8, padding:"10px 12px", borderRadius:14,
-              background:"var(--char-800)", border:"1px dashed var(--char-600)",
-              display:"flex", alignItems:"center", gap:10,
-            }}>
-              <Flag code={m.a} size={22}/>
-              <span style={{fontSize:11, color:"var(--cream-100)", fontWeight:700}}>vs</span>
-              <Flag code={m.b} size={22}/>
-              <div style={{flex:1, fontSize:10, color:"var(--char-400)"}}>{m.date} · {m.time}</div>
-              <Pill tone="open">OPEN</Pill>
-            </div>
           ))}
         </div>
       )}
@@ -3117,6 +3094,13 @@ function KPI({ v, l, delta, tone }) {
 }
 
 function ResultCard({ m, onChange }) {
+  const statusLabel = m.status === "finalizado" ? "FT" : m.status === "vivo" ? `VIVO - ${m.minute}` : "MANUAL";
+  const statusTone = m.status === "finalizado" ? "done" : m.status === "vivo" ? "live" : "open";
+  const saveCurrent = () => {
+    onChange(m.id, "scoreA", Number(m.scoreA || 0));
+    onChange(m.id, "scoreB", Number(m.scoreB || 0));
+  };
+
   return (
     <div style={{
       padding:"14px", borderRadius:18,
@@ -3125,7 +3109,7 @@ function ResultCard({ m, onChange }) {
     }}>
       <div style={{display:"flex", justifyContent:"space-between", alignItems:"center"}}>
         <Eyebrow color="var(--char-400)">{m.phase}</Eyebrow>
-        <Pill tone="live">VIVO · {m.minute}</Pill>
+        <Pill tone={statusTone}>{statusLabel}</Pill>
       </div>
       <div style={{
         marginTop:12,
@@ -3146,8 +3130,8 @@ function ResultCard({ m, onChange }) {
         </div>
       </div>
       <div style={{display:"flex", gap:7, marginTop:12}}>
-        <Btn variant="primary" size="sm" icon="check" style={{flex:1}}>Guardar</Btn>
-        <Btn variant="ghost" size="sm" icon="flag" style={{flex:1}}>Finalizar</Btn>
+        <Btn variant="primary" size="sm" icon="check" style={{flex:1}} onClick={saveCurrent}>Guardar</Btn>
+        <Btn variant="ghost" size="sm" icon="flag" style={{flex:1}} onClick={saveCurrent}>Finalizar</Btn>
       </div>
     </div>
   );
@@ -3269,23 +3253,10 @@ function MobileBottomNav({ screen, go }) {
 function App() {
   const [screen, setScreen] = useState("home");
   const [tweaks] = (window.useTweaks || ((d)=>[d, ()=>{}]))(TWEAK_DEFAULTS);
-  const [liveStatus, setLiveStatus] = useState(window.ProdeStore?.getLiveStatus?.());
   const isDesktop = useIsDesktop();
 
   useEffect(() => {
     window.ProdeDB?.init();
-    const sync = async () => {
-      const status = await window.ProdeStore?.syncLiveMatches?.();
-      if (status) setLiveStatus(status);
-    };
-    sync();
-    const interval = setInterval(sync, 5 * 60 * 1000);
-    const onData = () => setLiveStatus(window.ProdeStore?.getLiveStatus?.());
-    window.addEventListener("prode:data", onData);
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener("prode:data", onData);
-    };
   }, []);
 
   useEffect(() => {
@@ -3312,7 +3283,7 @@ function App() {
         <div className="app-side-card">
           <Eyebrow color="var(--neon-citrus)">Estado</Eyebrow>
           <div style={{fontFamily:"var(--font-title)",fontSize:18,color:"var(--cream-100)",textTransform:"uppercase",marginTop:5}}>247 jugadores</div>
-          <div style={{fontSize:11,color:"var(--char-400)",marginTop:4}}>{liveStatus?.message || "Predicciones abiertas para la fase de grupos."}</div>
+          <div style={{fontSize:11,color:"var(--char-400)",marginTop:4}}>Modo manual: resultados cargados desde Admin.</div>
         </div>
       </aside>
 
@@ -3328,8 +3299,28 @@ function App() {
 }
 
 function DesktopAdmin() {
-  // Reuse the admin screen but with desktop layout — for simplicity render Admin in a scrolling container.
-  // The Admin component is mobile-shaped; on desktop we present it as a wider 2-column layout.
+  const [matches, setMatches] = useState(window.ProdeStore?.getMatches?.() || window.MATCHES);
+
+  useEffect(() => {
+    const onData = () => setMatches(window.ProdeStore?.getMatches?.() || window.MATCHES);
+    window.addEventListener("prode:data", onData);
+    return () => window.removeEventListener("prode:data", onData);
+  }, []);
+
+  const saveDesktopScore = (id, side, value) => {
+    setMatches(ms => {
+      const current = ms.find(m => m.id === id) || {};
+      const updated = {...current, [side]: value, status:"finalizado"};
+      window.ProdeStore?.saveMatchResult(id, {
+        status: "finalizado",
+        scoreA: side === "scoreA" ? value : Number(current.scoreA || 0),
+        scoreB: side === "scoreB" ? value : Number(current.scoreB || 0),
+      }).catch((error) => console.warn("[Prode Refugio] No se pudo guardar el resultado.", error));
+      return ms.map(m => m.id === id ? updated : m);
+    });
+  };
+
+  // Desktop admin keeps the same data model as mobile, but gives the staff a wider table for faster edits.
   return (
     <div style={{
       display:"grid", gridTemplateColumns:"220px 1fr",
@@ -3384,7 +3375,7 @@ function DesktopAdmin() {
             <h1 style={{
               fontFamily:"var(--font-title)", fontSize:36, color:"var(--cream-100)",
               textTransform:"uppercase", letterSpacing:"0.02em", margin:"4px 0 0",
-            }}>Calendario del Mundial</h1>
+            }}>Carga manual de resultados</h1>
           </div>
           <div style={{display:"flex", gap:8}}>
             <Btn variant="ghost" size="md" icon="download">Exportar</Btn>
@@ -3396,7 +3387,7 @@ function DesktopAdmin() {
         <div style={{display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:12, marginBottom:20}}>
           <DKPI v="247"  l="Jugadores activos"  delta="+18 hoy"   tone="citrus"/>
           <DKPI v="1,432" l="Predicciones J1"    delta="+312 hoy"  tone="orange"/>
-          <DKPI v="98%"  l="Cierre automático"  delta="2 abiertos" tone="sage"/>
+          <DKPI v="Manual"  l="Resultados"  delta="ranking activo" tone="sage"/>
           <DKPI v="$840" l="Premios entregados"  delta="3 esta sem" tone="tan"/>
         </div>
 
@@ -3407,55 +3398,59 @@ function DesktopAdmin() {
         }}>
           <div style={{
             padding:"12px 16px", borderBottom:"1px solid var(--char-700)",
-            display:"grid", gridTemplateColumns:"60px 1fr 130px 200px 120px 90px 60px", gap:12,
+            display:"grid", gridTemplateColumns:"70px 1.35fr 120px 120px 1fr 90px 80px", gap:12,
             fontSize:9, letterSpacing:"0.22em", textTransform:"uppercase", color:"var(--char-400)", fontWeight:700,
           }}>
-            <span>FECHA</span><span>Partido</span><span>Estado</span><span>Sede</span>
-            <span>Hora</span><span style={{textAlign:"center"}}>Preds</span><span></span>
+            <span>FECHA</span><span>Partido</span><span>Resultado</span><span>Estado</span><span>Sede</span>
+            <span>Hora</span><span></span>
           </div>
-          {(window.ProdeStore?.getMatches?.() || window.MATCHES).slice(0, 9).map((m,i) => (
+          {matches.slice(0, 9).map((m,i) => {
+            const saveRow = () => {
+              const scoreA = Number(m.scoreA || 0);
+              const scoreB = Number(m.scoreB || 0);
+              setMatches(ms => ms.map(item => item.id === m.id ? {...item, scoreA, scoreB, status:"finalizado"} : item));
+              window.ProdeStore?.saveMatchResult(m.id, {status:"finalizado", scoreA, scoreB})
+                .catch((error) => console.warn("[Prode Refugio] No se pudo guardar el resultado.", error));
+            };
+            return (
             <div key={m.id} style={{
               padding:"12px 16px", borderBottom: i<8 ? "1px solid var(--char-700)" : 0,
-              display:"grid", gridTemplateColumns:"60px 1fr 130px 200px 120px 90px 60px", gap:12,
+              display:"grid", gridTemplateColumns:"70px 1.35fr 120px 120px 1fr 90px 80px", gap:12,
               alignItems:"center", fontSize:12,
             }}>
               <div style={{
                 fontFamily:"var(--font-title)", fontSize:11, color:"var(--char-200)",
               }}>{m.date.slice(4)}</div>
-              <div style={{display:"flex", alignItems:"center", gap:8}}>
+              <div style={{display:"flex", alignItems:"center", gap:8, minWidth:0}}>
                 <Flag code={m.a} size={20}/>
                 <span style={{color:"var(--cream-100)", fontWeight:600}}>{window.TEAMS[m.a]}</span>
-                {m.status === "vivo" || m.status === "finalizado" ? (
-                  <span style={{
-                    fontFamily:"var(--font-title)", fontSize:13, color:"var(--neon-coral)", margin:"0 4px",
-                  }}>{m.scoreA}–{m.scoreB}</span>
-                ) : (
-                  <span style={{color:"var(--char-500)", margin:"0 6px"}}>vs</span>
-                )}
+                <span style={{color:"var(--char-500)", margin:"0 2px"}}>vs</span>
                 <span style={{color:"var(--cream-100)", fontWeight:600}}>{window.TEAMS[m.b]}</span>
                 <Flag code={m.b} size={20}/>
               </div>
+              <div style={{display:"flex", alignItems:"center", gap:6}}>
+                <input type="number" value={m.scoreA || 0} onChange={e=>saveDesktopScore(m.id,"scoreA",Number(e.target.value || 0))} style={desktopScoreInput}/>
+                <span style={{color:"var(--char-500)", fontFamily:"var(--font-title)"}}>?</span>
+                <input type="number" value={m.scoreB || 0} onChange={e=>saveDesktopScore(m.id,"scoreB",Number(e.target.value || 0))} style={desktopScoreInput}/>
+              </div>
               <div>
-                {m.status === "vivo" ? <Pill tone="live">VIVO · {m.minute}</Pill> :
+                {m.status === "vivo" ? <Pill tone="live">VIVO - {m.minute}</Pill> :
                  m.status === "finalizado" ? <Pill tone="done">FT</Pill> :
-                 <Pill tone="open">Abierto</Pill>}
+                 <Pill tone="open">Manual</Pill>}
               </div>
               <div style={{color:"var(--char-200)", fontSize:11}}>{m.venue}</div>
               <div style={{color:"var(--char-200)", fontFamily:"var(--font-mono)"}}>{m.time}</div>
-              <div style={{textAlign:"center", color:"var(--neon-citrus)", fontWeight:700}}>
-                {Math.floor(180 + Math.random()*60)}
-              </div>
               <div style={{textAlign:"right"}}>
-                <button style={{
-                  width:30, height:30, borderRadius:8, border:"1px solid var(--char-600)",
-                  background:"var(--char-900)", color:"var(--char-200)", cursor:"pointer",
+                <button onClick={saveRow} style={{
+                  width:34, height:34, borderRadius:8, border:"1px solid var(--neon-citrus)",
+                  background:"var(--char-900)", color:"var(--neon-citrus)", cursor:"pointer",
                   display:"inline-flex", alignItems:"center", justifyContent:"center",
                 }}>
-                  <i data-lucide="more-horizontal" style={{width:14,height:14}}></i>
+                  <i data-lucide="check" style={{width:14,height:14}}></i>
                 </button>
               </div>
             </div>
-          ))}
+          )})}
         </div>
 
         {/* announcement composer */}
@@ -3501,6 +3496,13 @@ function DesktopAdmin() {
     </div>
   );
 }
+
+const desktopScoreInput = {
+  width:42, height:34, borderRadius:8,
+  background:"var(--char-900)", color:"var(--cream-100)",
+  border:"1px solid var(--char-600)", outline:"none",
+  fontFamily:"var(--font-title)", fontSize:16, textAlign:"center",
+};
 
 function DKPI({ v, l, delta, tone }) {
   const colors = {
