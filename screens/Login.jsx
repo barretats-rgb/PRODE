@@ -15,6 +15,9 @@ function Login() {
     } catch (e) {
       console.error("[Prode Refugio] login", e);
       setError("No se pudo iniciar sesión. Probá de nuevo.");
+    } finally {
+      // Reset por si el popup se cierra o el callback de sesión tarda. Si la app ya
+      // navegó (gate), este setState sobre componente desmontado es no-op en React 18.
       setBusy(false);
     }
   };
