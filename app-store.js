@@ -218,7 +218,7 @@
     };
 
     try {
-      const response = await fetch("/api/live-matches?live=all", { cache: "no-store" });
+      const response = await fetch("/api/live-matches", { cache: "no-store" });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const payload = await response.json();
       status.configured = !!payload.configured;

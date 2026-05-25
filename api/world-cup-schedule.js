@@ -1,32 +1,30 @@
 const API_BASE = "https://v3.football.api-sports.io/fixtures";
 const WORLD_CUP_LEAGUE_ID = "1";
 const WORLD_CUP_SEASON = "2026";
-const LIVE_STATUS = "1H-HT-2H-ET-P-BT-LIVE";
-
-function mapStatus(short) {
-  const code = String(short || "").toUpperCase();
-  if (["1H", "2H", "HT", "ET", "BT", "P", "LIVE", "INT"].includes(code)) return "vivo";
-  if (["FT", "AET", "PEN"].includes(code)) return "finalizado";
-  return "abierto";
-}
 
 function normalizeFixture(item) {
   const fixture = item.fixture || {};
-  const status = fixture.status || {};
   const teams = item.teams || {};
   const goals = item.goals || {};
   const league = item.league || {};
+  const venue = fixture.venue || {};
+  const status = fixture.status || {};
 
   return {
     apiFixtureId: fixture.id,
     leagueId: league.id,
     leagueName: league.name,
+    round: league.round || "",
     season: league.season,
     date: fixture.date,
-    status: mapStatus(status.short),
+    venue: {
+      id: venue.id,
+      name: venue.name || "",
+      city: venue.city || "",
+    },
     statusShort: status.short || "",
     statusLong: status.long || "",
-    minute: status.elapsed ? `${status.elapsed}'` : "",
+    elapsed: status.elapsed || null,
     home: {
       id: teams.home?.id,
       name: teams.home?.name || "",
@@ -37,13 +35,13 @@ function normalizeFixture(item) {
       name: teams.away?.name || "",
       code: teams.away?.code || "",
     },
-    scoreHome: Number.isFinite(goals.home) ? goals.home : goals.home ?? 0,
-    scoreAway: Number.isFinite(goals.away) ? goals.away : goals.away ?? 0,
+    scoreHome: goals.home ?? null,
+    scoreAway: goals.away ?? null,
   };
 }
 
 module.exports = async function handler(req, res) {
-  res.setHeader("Cache-Control", "s-maxage=45, stale-while-revalidate=180");
+  res.setHeader("Cache-Control", "s-maxage=3600, stale-while-revalidate=86400");
 
   const apiKey =
     process.env.API_FOOTBALL_KEY ||
@@ -62,7 +60,8 @@ module.exports = async function handler(req, res) {
   const url = new URL(API_BASE);
   url.searchParams.set("league", req.query.league || WORLD_CUP_LEAGUE_ID);
   url.searchParams.set("season", req.query.season || WORLD_CUP_SEASON);
-  url.searchParams.set("status", req.query.status || LIVE_STATUS);
+  if (req.query.from) url.searchParams.set("from", req.query.from);
+  if (req.query.to) url.searchParams.set("to", req.query.to);
   if (req.query.timezone) url.searchParams.set("timezone", req.query.timezone);
 
   try {
@@ -88,7 +87,7 @@ module.exports = async function handler(req, res) {
     return res.status(502).json({
       ok: false,
       configured: true,
-      error: error.message || "API-Football request failed.",
+      error: error.message || "API-Football schedule request failed.",
       fixtures: [],
     });
   }
