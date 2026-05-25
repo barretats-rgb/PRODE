@@ -103,14 +103,14 @@ function App() {
   }
 
   // GATE 3: con sesión pero sin equipo favorito → completar perfil.
+  // Layout centrado propio: NO usar la grilla de 2 columnas del app-shell, que sin
+  // sidebar dejaría el formulario apretado en la columna de 260px en desktop.
   if (auth?.user && auth.player && !auth.player.favoriteTeam) {
     return (
-      <div className="app-shell">
-        <main className="app-main">
-          <div className="app-content">
-            <Register go={go}/>
-          </div>
-        </main>
+      <div style={{minHeight:"100vh", display:"flex", justifyContent:"center", alignItems:"flex-start", padding:"24px 16px", background:"var(--char-900)"}}>
+        <div style={{width:"100%", maxWidth:520}}>
+          <Register go={go}/>
+        </div>
       </div>
     );
   }
