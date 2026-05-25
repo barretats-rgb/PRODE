@@ -14,3 +14,7 @@ window.FIREBASE_CONFIG = {
   messagingSenderId: "337362377841",
   appId: "1:337362377841:web:42d3130acfbcb21365cfd0",
 };
+
+// Emails con acceso al panel Admin. La barrera real está en las reglas de Firestore (Plan 2B);
+// esto es para mostrar/ocultar el panel en la UI.
+window.PRODE_ADMINS = ["barretats@gmail.com"];
