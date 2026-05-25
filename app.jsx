@@ -17,20 +17,6 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "phrase": "El Mundial se juega en la cancha, se gana en Refugio."
 }/*EDITMODE-END*/;
 
-function StatusBar() {
-  return (
-    <div className="statusbar">
-      <span>22:47</span>
-      <div className="icons">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 18h3v-4H2zm5 0h3V10H7zm5 0h3V6h-3zm5 0h3V2h-3z"/></svg>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M2 9a15 15 0 0120 0"/><path d="M5 12.5a10 10 0 0114 0"/><path d="M8.5 16a5 5 0 017 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor"/></svg>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="7" width="18" height="10" rx="2"/><rect x="4" y="9" width="13" height="6" rx="1" fill="currentColor"/><rect x="21" y="10" width="1.5" height="4" fill="currentColor"/></svg>
-      </div>
-    </div>
-  );
-}
-
-
 const NAV_ITEMS = [
   { screen:"home",    label:"Home",    icon:"home" },
   { screen:"matches", label:"Prode",   icon:"goal" },
