@@ -1,0 +1,428 @@
+/* ============================================================
+   PRODE REFUGIO — Componentes compartidos
+   ============================================================ */
+
+const { useState, useEffect, useRef } = React;
+
+/* ---------- Flag ---------- */
+function Flag({ code, size = 28, ring = false }) {
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: "50%",
+      backgroundImage: `url(${window.FLAG(code)})`,
+      backgroundSize: "cover", backgroundPosition: "center",
+      boxShadow: ring ? "0 0 0 2px var(--cream-100), 0 0 0 3px var(--char-700)" : "inset 0 0 0 1px rgba(245,238,217,0.18)",
+      flexShrink: 0,
+    }}/>
+  );
+}
+
+/* ---------- Eyebrow ---------- */
+function Eyebrow({ children, color = "var(--neon-citrus)", style }) {
+  return <div style={{
+    fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase",
+    fontWeight: 600, color, fontFamily: "var(--font-body)", ...style,
+  }}>{children}</div>;
+}
+
+/* ---------- Pill (status / phase chip) ---------- */
+function Pill({ children, tone = "ghost", style }) {
+  const tones = {
+    ghost:  { bg:"transparent", color:"var(--char-200)", border:"1px solid rgba(245,238,217,0.18)" },
+    live:   { bg:"var(--neon-coral)", color:"var(--char-900)", border:"0" },
+    open:   { bg:"transparent", color:"var(--neon-citrus)", border:"1px solid var(--neon-citrus)" },
+    closed: { bg:"transparent", color:"var(--char-400)", border:"1px solid var(--char-500)" },
+    done:   { bg:"var(--char-700)", color:"var(--char-200)", border:"1px solid var(--char-600)" },
+    orange: { bg:"var(--orange-500)", color:"var(--cream-50)", border:"0" },
+  };
+  const t = tones[tone] || tones.ghost;
+  return <span style={{
+    display:"inline-flex", alignItems:"center", gap:6,
+    padding:"3px 9px", borderRadius:999,
+    fontSize:9, letterSpacing:"0.2em", textTransform:"uppercase", fontWeight:700,
+    fontFamily:"var(--font-body)",
+    background:t.bg, color:t.color, border:t.border, ...style,
+  }}>{children}</span>;
+}
+
+/* ---------- Button ---------- */
+function Btn({ children, variant="primary", size="md", onClick, full, style, icon }) {
+  const sizes = {
+    sm: { padding:"9px 14px", fontSize:10 },
+    md: { padding:"14px 22px", fontSize:11 },
+    lg: { padding:"18px 28px", fontSize:12 },
+  };
+  const variants = {
+    primary: { background:"var(--orange-500)", color:"var(--cream-50)", border:"0" },
+    accent:  { background:"var(--neon-citrus)", color:"var(--char-900)", border:"0" },
+    ghost:   { background:"transparent", color:"var(--cream-100)", border:"1.5px solid var(--cream-100)" },
+    dark:    { background:"var(--char-900)", color:"var(--cream-100)", border:"1px solid var(--char-600)" },
+  };
+  return (
+    <button onClick={onClick} style={{
+      width: full ? "100%" : "auto",
+      display:"inline-flex", alignItems:"center", justifyContent:"center", gap:8,
+      borderRadius:999, cursor:"pointer", fontFamily:"var(--font-body)",
+      fontWeight:700, letterSpacing:"0.22em", textTransform:"uppercase",
+      transition:"transform .18s cubic-bezier(.2,.7,.2,1), filter .18s",
+      ...sizes[size], ...variants[variant], ...style,
+    }}
+    onMouseEnter={e=>e.currentTarget.style.transform="translateY(-1px)"}
+    onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>
+      {icon && <i data-lucide={icon} style={{width:14,height:14,strokeWidth:2.25}}></i>}
+      {children}
+    </button>
+  );
+}
+
+/* ---------- AppBar (top of mobile screen) ---------- */
+function AppBar({ title, subtitle, back, onBack, right }) {
+  return (
+    <div style={{
+      display:"flex", alignItems:"center", gap:12,
+      padding:"14px 18px 6px",
+      position:"sticky", top:0, zIndex:10,
+      background:"linear-gradient(180deg, var(--char-900) 0%, var(--char-900) 70%, rgba(26,25,22,0) 100%)",
+    }}>
+      {back ? (
+        <button onClick={onBack} style={{
+          width:36, height:36, borderRadius:"50%", border:"1px solid var(--char-600)",
+          background:"var(--char-800)", color:"var(--cream-100)", cursor:"pointer",
+          display:"flex", alignItems:"center", justifyContent:"center",
+        }}>
+          <i data-lucide="chevron-left" style={{width:18,height:18}}></i>
+        </button>
+      ) : (
+        <div style={{
+          fontFamily:"var(--font-display)", fontSize:22, lineHeight:0.85,
+          textTransform:"uppercase", color:"var(--orange-500)",
+        }}>
+          REFU<br/><span style={{paddingLeft:"0.55em", display:"inline-block", color:"var(--cream-100)"}}>GIO</span>
+        </div>
+      )}
+      <div style={{flex:1, paddingLeft: back ? 0 : 8}}>
+        {subtitle && <Eyebrow color="var(--neon-citrus)">{subtitle}</Eyebrow>}
+        <div style={{
+          fontFamily:"var(--font-title)", fontSize:back?20:18, textTransform:"uppercase",
+          color:"var(--cream-100)", letterSpacing:"0.02em", lineHeight:1.05, marginTop:2,
+        }}>{title}</div>
+      </div>
+      {right}
+    </div>
+  );
+}
+
+/* ---------- TabBar (bottom nav) ---------- */
+function TabBar({ active, onChange }) {
+  const items = [
+    { id:"home",     icon:"home",      label:"Home" },
+    { id:"matches",  icon:"goal",      label:"Prode" },
+    { id:"ranking",  icon:"trophy",    label:"Ranking" },
+    { id:"groups",   icon:"users",     label:"Grupos" },
+    { id:"profile",  icon:"user",      label:"Yo" },
+  ];
+  return (
+    <nav style={{
+      position:"sticky", bottom:10, margin:"0 12px 10px",
+      display:"flex", padding:5, borderRadius:999,
+      background:"var(--char-900)",
+      border:"1px solid var(--char-700)",
+      boxShadow:"0 -10px 30px -10px rgba(0,0,0,.6)",
+      zIndex:10,
+    }}>
+      {items.map(it => {
+        const on = it.id === active;
+        return (
+          <button key={it.id} onClick={()=>onChange(it.id)} style={{
+            flex:1, padding:"10px 0", border:0, cursor:"pointer",
+            display:"flex", flexDirection:"column", alignItems:"center", gap:3,
+            background: on ? "var(--orange-500)" : "transparent",
+            color: on ? "var(--cream-50)" : "var(--char-200)",
+            borderRadius:999, fontSize:8, letterSpacing:"0.2em",
+            textTransform:"uppercase", fontWeight:700,
+            transition:"all .2s cubic-bezier(.2,.7,.2,1)",
+          }}>
+            <i data-lucide={it.icon} style={{width:18,height:18,strokeWidth:on?2.25:1.75}}></i>
+            <span>{it.label}</span>
+          </button>
+        );
+      })}
+    </nav>
+  );
+}
+
+/* ---------- Avatar (initials disc) ---------- */
+function Avatar({ initials, size = 36, tone = "olive", ring = false, you = false }) {
+  const tones = {
+    olive:  { bg:"var(--olive-500)",  fg:"var(--cream-50)" },
+    orange: { bg:"var(--orange-500)", fg:"var(--cream-50)" },
+    sage:   { bg:"var(--sage-300)",   fg:"var(--char-900)" },
+    tan:    { bg:"var(--tan-500)",    fg:"var(--cream-50)" },
+    citrus: { bg:"var(--neon-citrus)",fg:"var(--char-900)" },
+    char:   { bg:"var(--char-700)",   fg:"var(--cream-100)" },
+  };
+  const t = tones[tone] || tones.olive;
+  return (
+    <div style={{
+      width:size, height:size, borderRadius:"50%",
+      background:t.bg, color:t.fg,
+      display:"flex", alignItems:"center", justifyContent:"center",
+      fontFamily:"var(--font-title)", fontWeight:700,
+      fontSize: size*0.4, letterSpacing:"0.04em",
+      boxShadow: you ? "0 0 0 2px var(--neon-citrus), 0 0 0 4px var(--char-900)"
+                     : (ring ? "0 0 0 2px var(--cream-100), 0 0 0 3px var(--char-700)" : "none"),
+      flexShrink:0,
+    }}>{initials}</div>
+  );
+}
+
+/* ---------- BadgeChip ---------- */
+function BadgeChip({ kind, size = "sm" }) {
+  const b = window.BADGES[kind];
+  if (!b) return null;
+  const small = size === "sm";
+  return (
+    <div style={{
+      display:"inline-flex", alignItems:"center", gap: small?6:8,
+      padding: small ? "3px 8px 3px 4px" : "5px 12px 5px 6px",
+      background:"var(--char-700)", border:"1px solid var(--char-600)",
+      borderRadius:999, color:"var(--cream-100)",
+    }}>
+      <span style={{
+        width: small?16:22, height: small?16:22, borderRadius:"50%",
+        background:b.color, color:"var(--char-900)",
+        display:"flex", alignItems:"center", justifyContent:"center",
+        fontWeight:700, fontSize: small?10:13,
+      }}>{b.emoji}</span>
+      <span style={{
+        fontSize: small?9:11, letterSpacing:"0.18em", textTransform:"uppercase",
+        fontFamily:"var(--font-body)", fontWeight:700,
+      }}>{b.label}</span>
+    </div>
+  );
+}
+
+/* ---------- Countdown ---------- */
+function Countdown({ target = "2026-06-12T18:00:00", label = "Argentina vs Croacia" }) {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => { const t = setInterval(()=>setNow(Date.now()), 1000); return ()=>clearInterval(t); }, []);
+  const diff = Math.max(0, new Date(target).getTime() - now);
+  const d = Math.floor(diff/86400000);
+  const h = Math.floor((diff%86400000)/3600000);
+  const m = Math.floor((diff%3600000)/60000);
+  const s = Math.floor((diff%60000)/1000);
+  const Cell = ({ v, l }) => (
+    <div style={{flex:1, textAlign:"center"}}>
+      <div style={{
+        fontFamily:"var(--font-title)", fontSize:36, color:"var(--cream-100)",
+        lineHeight:1, letterSpacing:"0.02em",
+      }}>{String(v).padStart(2,"0")}</div>
+      <div style={{
+        fontSize:9, letterSpacing:"0.24em", color:"var(--char-400)",
+        textTransform:"uppercase", fontWeight:600, marginTop:6,
+      }}>{l}</div>
+    </div>
+  );
+  return (
+    <div>
+      <div style={{display:"flex", gap:6}}>
+        <Cell v={d} l="Días"/>
+        <div style={{color:"var(--char-600)", fontFamily:"var(--font-title)", fontSize:32}}>:</div>
+        <Cell v={h} l="Hs"/>
+        <div style={{color:"var(--char-600)", fontFamily:"var(--font-title)", fontSize:32}}>:</div>
+        <Cell v={m} l="Min"/>
+        <div style={{color:"var(--char-600)", fontFamily:"var(--font-title)", fontSize:32}}>:</div>
+        <Cell v={s} l="Seg"/>
+      </div>
+      <div style={{
+        marginTop:10, fontSize:11, letterSpacing:"0.16em", textTransform:"uppercase",
+        color:"var(--char-200)", fontWeight:600, textAlign:"center",
+      }}>Próximo: <span style={{color:"var(--neon-citrus)"}}>{label}</span></div>
+    </div>
+  );
+}
+
+/* ---------- MatchRow (compact) ---------- */
+function MatchRow({ match, prediction, onChange, locked }) {
+  const m = match;
+  const live = m.status === "vivo";
+  const done = m.status === "finalizado";
+  const open = m.status === "abierto";
+
+  // For done matches, show real score; for vivo, show real running score; for open, show inputs.
+  const showLiveScore = live || done;
+
+  return (
+    <div style={{
+      background: live ? "linear-gradient(180deg, rgba(255,122,61,0.08), rgba(255,122,61,0) 60%), var(--char-800)" : "var(--char-800)",
+      border: live ? "1px solid var(--neon-coral)" : "1px solid var(--char-700)",
+      borderRadius: 22, padding: "14px 14px 12px", marginBottom: 12,
+    }}>
+      {/* top row: phase + status */}
+      <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10}}>
+        <Eyebrow color="var(--char-400)" style={{letterSpacing:"0.18em"}}>{m.phase}</Eyebrow>
+        {live ? <Pill tone="live"><span style={{
+          width:6, height:6, borderRadius:"50%", background:"var(--char-900)",
+          animation:"pulse 1.2s infinite",
+        }}/>EN VIVO · {m.minute}</Pill> :
+         done ? <Pill tone="done">FT</Pill> :
+         <Pill tone="open">Abierto</Pill>}
+      </div>
+
+      {/* match body */}
+      <div style={{
+        display:"grid",
+        gridTemplateColumns:"1fr 88px 1fr",
+        alignItems:"center", gap:6,
+      }}>
+        {/* TEAM A */}
+        <div style={{display:"flex", alignItems:"center", gap:10, justifyContent:"flex-start"}}>
+          <Flag code={m.a} size={32}/>
+          <div>
+            <div style={{
+              fontFamily:"var(--font-title)", fontSize:16, color:"var(--cream-100)",
+              textTransform:"uppercase", letterSpacing:"0.02em", lineHeight:1,
+            }}>{window.TEAMS[m.a]}</div>
+            <div style={{fontSize:9, color:"var(--char-400)", letterSpacing:"0.18em", marginTop:3, fontWeight:600}}>{m.a}</div>
+          </div>
+        </div>
+
+        {/* SCORE */}
+        <div style={{display:"flex", alignItems:"center", justifyContent:"center", gap:6}}>
+          {showLiveScore ? (
+            <>
+              <div style={{
+                fontFamily:"var(--font-title)", fontSize:28,
+                color: live ? "var(--neon-coral)" : "var(--cream-100)",
+              }}>{m.scoreA}</div>
+              <div style={{color:"var(--char-500)", fontSize:18}}>–</div>
+              <div style={{
+                fontFamily:"var(--font-title)", fontSize:28,
+                color: live ? "var(--neon-coral)" : "var(--cream-100)",
+              }}>{m.scoreB}</div>
+            </>
+          ) : (
+            <>
+              <NumStepper value={prediction?.a} onChange={(v)=>onChange?.({a:v, b:prediction?.b ?? 0})} disabled={locked}/>
+              <div style={{color:"var(--char-500)", fontSize:14}}>–</div>
+              <NumStepper value={prediction?.b} onChange={(v)=>onChange?.({a:prediction?.a ?? 0, b:v})} disabled={locked}/>
+            </>
+          )}
+        </div>
+
+        {/* TEAM B */}
+        <div style={{display:"flex", alignItems:"center", gap:10, justifyContent:"flex-end"}}>
+          <div style={{textAlign:"right"}}>
+            <div style={{
+              fontFamily:"var(--font-title)", fontSize:16, color:"var(--cream-100)",
+              textTransform:"uppercase", letterSpacing:"0.02em", lineHeight:1,
+            }}>{window.TEAMS[m.b]}</div>
+            <div style={{fontSize:9, color:"var(--char-400)", letterSpacing:"0.18em", marginTop:3, fontWeight:600}}>{m.b}</div>
+          </div>
+          <Flag code={m.b} size={32}/>
+        </div>
+      </div>
+
+      {/* For open matches, show your prediction (mini) */}
+      {open && prediction && (
+        <div style={{
+          marginTop:10, padding:"7px 10px", borderRadius:14,
+          background:"var(--char-900)", border:"1px dashed var(--char-600)",
+          display:"flex", alignItems:"center", justifyContent:"space-between",
+        }}>
+          <Eyebrow color="var(--neon-citrus)">Tu predicción</Eyebrow>
+          <div style={{fontFamily:"var(--font-title)", fontSize:14, color:"var(--cream-100)"}}>
+            {prediction.a} – {prediction.b}
+          </div>
+        </div>
+      )}
+      {done && prediction && (
+        <div style={{
+          marginTop:10, padding:"7px 10px", borderRadius:14,
+          background: prediction.points >= 5 ? "rgba(232,242,106,0.12)" : prediction.points > 0 ? "rgba(255,122,61,0.10)" : "var(--char-900)",
+          border:"1px solid " + (prediction.points >= 5 ? "var(--neon-citrus)" : prediction.points > 0 ? "var(--orange-500)" : "var(--char-700)"),
+          display:"flex", alignItems:"center", justifyContent:"space-between",
+        }}>
+          <Eyebrow color={prediction.points >= 5 ? "var(--neon-citrus)" : "var(--char-200)"}>
+            Predijiste {prediction.a}–{prediction.b}
+          </Eyebrow>
+          <div style={{
+            fontFamily:"var(--font-title)", fontSize:14,
+            color: prediction.points >= 5 ? "var(--neon-citrus)" : prediction.points > 0 ? "var(--orange-400)" : "var(--char-400)",
+          }}>
+            {prediction.points >= 5 ? "+5 EXACTO" : prediction.points > 0 ? `+${prediction.points} GANADOR` : "0 PUNTOS"}
+          </div>
+        </div>
+      )}
+
+      {/* footer: date/venue */}
+      <div style={{
+        marginTop:10, display:"flex", alignItems:"center", justifyContent:"space-between", gap:8,
+        fontSize:10, color:"var(--char-400)", letterSpacing:"0.08em",
+      }}>
+        <span style={{display:"inline-flex",alignItems:"center",gap:5}}>
+          <i data-lucide="calendar" style={{width:11,height:11}}></i>
+          {m.date} · {m.time}
+        </span>
+        <span style={{display:"inline-flex",alignItems:"center",gap:5, opacity:0.8}}>
+          <i data-lucide="map-pin" style={{width:11,height:11}}></i>
+          {m.venue}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- NumStepper ---------- */
+function NumStepper({ value = 0, onChange, disabled }) {
+  return (
+    <div style={{
+      display:"flex", flexDirection:"column", alignItems:"center", gap:2,
+    }}>
+      <button disabled={disabled} onClick={()=>onChange?.(Math.min(9,(value||0)+1))} style={{
+        width:24, height:18, border:0, borderRadius:6,
+        background:"var(--char-700)", color:"var(--cream-100)",
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.3 : 1,
+        display:"flex", alignItems:"center", justifyContent:"center",
+      }}>
+        <i data-lucide="chevron-up" style={{width:13,height:13}}></i>
+      </button>
+      <div style={{
+        width:34, height:34, borderRadius:10,
+        background:"var(--char-900)",
+        border: disabled ? "1px solid var(--char-700)" : "1.5px solid var(--neon-citrus)",
+        display:"flex", alignItems:"center", justifyContent:"center",
+        fontFamily:"var(--font-title)", fontSize:18,
+        color: disabled ? "var(--char-400)" : "var(--cream-100)",
+      }}>{value ?? 0}</div>
+      <button disabled={disabled} onClick={()=>onChange?.(Math.max(0,(value||0)-1))} style={{
+        width:24, height:18, border:0, borderRadius:6,
+        background:"var(--char-700)", color:"var(--cream-100)",
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.3 : 1,
+        display:"flex", alignItems:"center", justifyContent:"center",
+      }}>
+        <i data-lucide="chevron-down" style={{width:13,height:13}}></i>
+      </button>
+    </div>
+  );
+}
+
+/* ---------- Card (generic) ---------- */
+function Card({ children, style, dark = true, glow = false, padding = 16 }) {
+  return (
+    <div style={{
+      background: dark ? "var(--char-800)" : "var(--cream-100)",
+      border: glow ? "1px solid var(--neon-citrus)" : "1px solid var(--char-700)",
+      borderRadius:22, padding,
+      boxShadow: glow ? "0 0 24px -8px rgba(232,242,106,0.4)" : "none",
+      ...style,
+    }}>{children}</div>
+  );
+}
+
+Object.assign(window, {
+  Flag, Eyebrow, Pill, Btn, AppBar, TabBar, Avatar, BadgeChip,
+  Countdown, MatchRow, NumStepper, Card,
+});

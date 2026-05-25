@@ -1,0 +1,256 @@
+/* ============================================================
+   REFUGIO — Tokens (colors + type)
+   "From the first coffee to the last drink"
+   Tamarindo, Costa Rica
+   ============================================================ */
+
+/* @import must come first in CSS files */
+@import url("https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Big+Shoulders+Display:wght@800;900&display=swap");
+
+/* ---------- Fonts ---------- */
+@font-face {
+  font-family: "Mauren";
+  src: url("fonts/Mauren-Trial.otf") format("opentype");
+  font-weight: 400 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Barnule";
+  src: url("fonts/Barnule-Trial.ttf") format("truetype");
+  font-weight: 400 900;
+  font-display: swap;
+}
+
+/* Numeric override — Mauren and Barnule trial faces have weak figures.
+   "RefugioNum" loads Big Shoulders Display 900 limited to digit glyphs
+   via unicode-range. Prepended to title/display stacks below, so digits
+   come from BSD while letters fall through to Mauren/Barnule. */
+@font-face {
+  font-family: "RefugioNum";
+  src: url("https://cdn.jsdelivr.net/npm/@fontsource/big-shoulders-display@5.0.20/files/big-shoulders-display-latin-900-normal.woff2") format("woff2");
+  font-weight: 700 900;
+  font-display: swap;
+  unicode-range: U+0030-0039, U+002B, U+002D, U+002F, U+003A, U+00B0, U+0025;
+}
+/* Body face — geometric grotesque. */
+
+:root {
+  /* ============================================================
+     COLORS — Core palette (Adobe palette + observed brand usage)
+     ============================================================ */
+
+  /* Primary — earth & shelter */
+  --olive-900: #3F4A36;     /* deep shade of olive, for night text on cream */
+  --olive-700: #4F5B43;
+  --olive-500: #627356;     /* PRIMARY — olive */
+  --olive-300: #8C9979;
+  --sage-300:  #B6BF93;     /* sage — quiet support */
+  --sage-100:  #D8DEC2;
+  --cream-50:  #FAF6E8;
+  --cream-100: #F5EED9;     /* PRIMARY — cream surface (Day Mode bg) */
+  --cream-200: #ECE2C4;
+
+  /* Warm — sunset & skin */
+  --tan-500:   #BB9570;     /* warm tan — wood, cardboard, packaging */
+  --tan-300:   #D4B796;
+  --tan-700:   #8E6E50;
+
+  /* Accent — fire & nightlife */
+  --orange-500: #BF612A;    /* PRIMARY ACCENT — burnt orange */
+  --orange-400: #D67836;
+  --orange-300: #E69156;
+  --orange-700: #8E4519;
+
+  /* Neutrals — Night Mode foundation */
+  --char-900: #1A1916;      /* near-black, used in posters */
+  --char-800: #2B2A28;      /* warm charcoal — Night Mode bg */
+  --char-700: #3A3835;
+  --char-600: #4F4C48;
+  --char-500: #6E6A65;
+  --char-400: #94908A;
+  --char-200: #CFCAC1;
+
+  /* Night-only accent tones (high-energy events) */
+  --neon-citrus: #E8F26A;   /* lime cocktail / electric citrus */
+  --neon-coral:  #FF7A3D;   /* hotter pop of orange for flyers */
+  --night-blue:  #1D3F5C;   /* deep ocean — used in Buena Nota bowl & event posters */
+
+  /* ============================================================
+     SEMANTIC — Day Mode (default)
+     ============================================================ */
+  --bg:          var(--cream-100);
+  --bg-elevated: var(--cream-50);
+  --bg-sunk:     var(--cream-200);
+  --surface:     var(--cream-50);
+  --ink:         var(--olive-900);     /* primary text */
+  --ink-muted:   var(--olive-700);
+  --ink-subtle:  var(--char-500);
+  --line:        rgba(63, 74, 54, 0.18);
+  --line-strong: var(--olive-700);
+  --brand:       var(--olive-500);
+  --brand-ink:   var(--cream-50);      /* text on brand */
+  --accent:      var(--orange-500);
+  --accent-ink:  var(--cream-50);
+  --highlight:   var(--tan-500);
+
+  /* ============================================================
+     RADII / SHADOWS / SPACING
+     The brand's geometry is round, inflated, retro. Lean generous.
+     ============================================================ */
+  --r-xs: 4px;
+  --r-sm: 8px;
+  --r-md: 14px;
+  --r-lg: 22px;
+  --r-xl: 32px;
+  --r-pill: 999px;
+  --r-bubble: 28px;            /* signature soft-bubble corner */
+
+  --shadow-sm: 0 1px 2px rgba(26, 25, 22, 0.08);
+  --shadow-md: 0 6px 18px -8px rgba(26, 25, 22, 0.18), 0 2px 4px rgba(26, 25, 22, 0.06);
+  --shadow-lg: 0 20px 40px -16px rgba(26, 25, 22, 0.30), 0 6px 12px -6px rgba(26, 25, 22, 0.10);
+  --shadow-night: 0 30px 60px -20px rgba(0, 0, 0, 0.70);
+  --inner-press: inset 0 2px 0 rgba(26, 25, 22, 0.10);
+
+  /* spacing — 4 base */
+  --s-1: 4px;  --s-2: 8px;  --s-3: 12px; --s-4: 16px;
+  --s-5: 20px; --s-6: 24px; --s-8: 32px; --s-10: 40px;
+  --s-12: 48px; --s-16: 64px; --s-20: 80px; --s-24: 96px;
+
+  /* ============================================================
+     TYPE — Families & roles
+     ============================================================ */
+  --font-display: "RefugioNum", "Mauren", "Archivo Black", "Bowlby One SC", system-ui;
+  --font-title:   "RefugioNum", "Barnule", "Archivo Narrow", "Oswald", system-ui;
+  --font-body:    "Archivo", "Space Grotesk", system-ui, -apple-system, sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-numeric: "RefugioNum", "Big Shoulders Display", "Oswald", "Archivo Narrow", ui-monospace, sans-serif;
+
+  /* Type scale (fluid clamp not used — keep deterministic) */
+  --t-display: 96px;   /* Mauren — wordmark, hero */
+  --t-h1: 64px;        /* Mauren or Barnule */
+  --t-h2: 44px;
+  --t-h3: 32px;
+  --t-h4: 22px;
+  --t-eyebrow: 13px;   /* tracked all-caps label */
+  --t-body: 16px;
+  --t-small: 14px;
+  --t-tiny: 12px;
+}
+
+/* ============================================================
+   NIGHT MODE — apply on any container with [data-mode="night"]
+   ============================================================ */
+[data-mode="night"] {
+  --bg:          var(--char-800);
+  --bg-elevated: var(--char-700);
+  --bg-sunk:     var(--char-900);
+  --surface:     var(--char-700);
+  --ink:         var(--cream-100);
+  --ink-muted:   var(--char-200);
+  --ink-subtle:  var(--char-400);
+  --line:        rgba(245, 238, 217, 0.14);
+  --line-strong: var(--cream-100);
+  --brand:       var(--orange-500);     /* day's olive becomes night's orange */
+  --brand-ink:   var(--char-900);
+  --accent:      var(--neon-citrus);    /* high-energy lime */
+  --accent-ink:  var(--char-900);
+  --highlight:   var(--sage-300);
+}
+
+/* ============================================================
+   BASE TYPE STYLES (use as classes or extend)
+   ============================================================ */
+.t-display {
+  font-family: var(--font-display);
+  font-size: var(--t-display);
+  line-height: 0.88;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.t-h1 {
+  font-family: var(--font-title);
+  font-size: var(--t-h1);
+  line-height: 0.95;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.t-h2 {
+  font-family: var(--font-title);
+  font-size: var(--t-h2);
+  line-height: 1.0;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.t-h3 {
+  font-family: var(--font-title);
+  font-size: var(--t-h3);
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.t-h4 {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: var(--t-h4);
+  line-height: 1.2;
+  color: var(--ink);
+}
+.t-eyebrow {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: var(--t-eyebrow);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+.t-body {
+  font-family: var(--font-body);
+  font-size: var(--t-body);
+  line-height: 1.55;
+  color: var(--ink);
+}
+.t-small {
+  font-family: var(--font-body);
+  font-size: var(--t-small);
+  line-height: 1.5;
+  color: var(--ink-muted);
+}
+.t-mono {
+  font-family: var(--font-mono);
+  font-size: var(--t-small);
+  letter-spacing: 0.02em;
+}
+
+/* ============================================================
+   PAPER TEXTURE — every brand surface has a subtle grain.
+   Use .paper for cream, .paper-night for charcoal.
+   ============================================================ */
+.paper {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(rgba(63, 74, 54, 0.06) 1px, transparent 1px),
+    radial-gradient(rgba(187, 149, 112, 0.05) 1px, transparent 1px);
+  background-size: 3px 3px, 7px 7px;
+  background-position: 0 0, 1px 2px;
+}
+.paper-night {
+  background-color: var(--char-800);
+  background-image:
+    radial-gradient(rgba(245, 238, 217, 0.04) 1px, transparent 1px),
+    radial-gradient(rgba(191, 97, 42, 0.05) 1px, transparent 1px);
+  background-size: 3px 3px, 7px 7px;
+  background-position: 0 0, 1px 2px;
+}
+
+/* Card primitive — cream paper with 1px hairline + subtle warm shadow */
+.r-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-bubble);
+  box-shadow: var(--shadow-md);
+  padding: var(--s-6);
+}
