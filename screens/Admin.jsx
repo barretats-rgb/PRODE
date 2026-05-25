@@ -5,12 +5,28 @@
 
 function Admin({ go }) {
   const [tab, setTab] = useState("partidos");
-  const [matches, setMatches] = useState(window.MATCHES);
+  const [matches, setMatches] = useState(window.ProdeStore?.getMatches?.() || window.MATCHES);
+  const [liveStatus, setLiveStatus] = useState(window.ProdeStore?.getLiveStatus?.());
+
+  useEffect(() => {
+    const onData = () => {
+      setMatches(window.ProdeStore?.getMatches?.() || window.MATCHES);
+      setLiveStatus(window.ProdeStore?.getLiveStatus?.());
+    };
+    window.addEventListener("prode:data", onData);
+    return () => window.removeEventListener("prode:data", onData);
+  }, []);
+
+  const syncLive = async () => {
+    const status = await window.ProdeStore?.syncLiveMatches?.();
+    setMatches(window.ProdeStore?.getMatches?.() || window.MATCHES);
+    setLiveStatus(status);
+  };
 
   const updateScore = (id, side, val) => {
     setMatches(ms => ms.map(m => m.id === id ? {...m, [side]:val, status:"finalizado"} : m));
     const current = matches.find(m => m.id === id);
-    window.ProdeDB?.saveMatchResult(id, {
+    window.ProdeStore?.saveMatchResult(id, {
       [side]: val,
       status: "finalizado",
       scoreA: side === "scoreA" ? val : current?.scoreA || 0,
@@ -55,11 +71,28 @@ function Admin({ go }) {
       </div>
 
       {/* KPI strip */}
-      <div style={{padding:"14px 16px 0"}}>
+        <div style={{padding:"14px 16px 0"}}>
         <div style={{display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8}}>
           <KPI v="247" l="Jugadores" delta="+18 hoy" tone="citrus"/>
           <KPI v="1.4K" l="Predicciones" delta="+312 hoy" tone="orange"/>
           <KPI v="98%" l="Cargadas J1" delta="2 falta" tone="sage"/>
+        </div>
+      </div>
+
+      <div style={{padding:"14px 16px 0"}}>
+        <div style={{
+          padding:"12px 14px", borderRadius:14,
+          background:"var(--char-800)", border:"1px solid var(--char-700)",
+          display:"flex", alignItems:"center", gap:10,
+        }}>
+          <i data-lucide="radio" style={{width:18,height:18,color:"var(--neon-citrus)"}}></i>
+          <div style={{flex:1}}>
+            <div style={{fontSize:12, color:"var(--cream-100)", fontWeight:700}}>API-Football live</div>
+            <div style={{fontSize:10, color:"var(--char-400)", marginTop:3}}>
+              {liveStatus?.message || "Sin sincronizar todavia."}
+            </div>
+          </div>
+          <Btn variant="accent" size="sm" icon="refresh-cw" onClick={syncLive}>Sync</Btn>
         </div>
       </div>
 

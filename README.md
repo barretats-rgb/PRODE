@@ -22,6 +22,18 @@ Para activar persistencia real:
 
 Ver el modelo de datos sugerido en `FIREBASE_PLAN.md`.
 
+## API-Football live scores
+
+La app incluye una funcion serverless en `api/live-matches.js` para consultar API-Football sin exponer la API key en el navegador.
+
+En Vercel, agrega una variable de entorno:
+
+```bash
+API_FOOTBALL_KEY=tu_api_key_de_api_football
+```
+
+La app consulta `/api/live-matches?live=all`, intenta empatar esos fixtures con los partidos locales por selecciones, y actualiza marcador, minuto y estado. Si la variable no existe o la API no responde, la app sigue funcionando con datos locales/manuales.
+
 ## Ejecutar localmente
 
 Como es una app estatica, se puede servir desde cualquier servidor local. Por ejemplo:

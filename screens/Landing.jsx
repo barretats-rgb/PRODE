@@ -3,8 +3,15 @@
    ============================================================ */
 
 function Landing({ go }) {
-  const featured = window.MATCHES.find(m => m.featured && m.status === "abierto") || window.MATCHES[3];
-  const live = window.MATCHES.find(m => m.status === "vivo");
+  const [version, setVersion] = useState(0);
+  useEffect(() => {
+    const onData = () => setVersion(v => v + 1);
+    window.addEventListener("prode:data", onData);
+    return () => window.removeEventListener("prode:data", onData);
+  }, []);
+  const matches = window.ProdeStore?.getMatches?.() || window.MATCHES;
+  const featured = matches.find(m => m.featured && m.status === "abierto") || matches[3];
+  const live = matches.find(m => m.status === "vivo");
   const targetIso = "2026-06-12T18:00:00";
 
   return (

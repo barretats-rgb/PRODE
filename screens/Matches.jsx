@@ -6,9 +6,13 @@ function Matches({ go }) {
   const [filter, setFilter] = useState("todos"); // todos | hoy | abiertos | mios
   const [preds, setPreds] = useState(window.ProdeStore?.getPredictions?.() || { ...window.MY_PREDICTIONS });
   const [toast, setToast] = useState(null);
+  const [version, setVersion] = useState(0);
 
   useEffect(() => {
-    const onData = () => setPreds(window.ProdeStore?.getPredictions?.() || { ...window.MY_PREDICTIONS });
+    const onData = () => {
+      setPreds(window.ProdeStore?.getPredictions?.() || { ...window.MY_PREDICTIONS });
+      setVersion(v => v + 1);
+    };
     window.addEventListener("prode:data", onData);
     return () => window.removeEventListener("prode:data", onData);
   }, []);
@@ -23,7 +27,7 @@ function Matches({ go }) {
     setTimeout(()=>setToast(null), 1400);
   };
 
-  const all = window.MATCHES;
+  const all = window.ProdeStore?.getMatches?.() || window.MATCHES;
   const filtered = all.filter(m => {
     if (filter === "abiertos") return m.status === "abierto";
     if (filter === "hoy")      return m.date.startsWith("Jue 11") || m.status === "vivo";

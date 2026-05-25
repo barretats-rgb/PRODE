@@ -10,6 +10,59 @@
   const PLAYER_KEY = "prode_refugio_player";
   const PREDICTIONS_KEY = "prode_refugio_predictions";
   const SPECIALS_KEY = "prode_refugio_specials";
+  const MATCH_OVERRIDES_KEY = "prode_refugio_match_overrides";
+  const LIVE_STATUS_KEY = "prode_refugio_live_status";
+
+  const TEAM_ALIASES = {
+    ARG: ["argentina"],
+    BRA: ["brazil", "brasil"],
+    URU: ["uruguay"],
+    COL: ["colombia"],
+    ECU: ["ecuador"],
+    PAR: ["paraguay"],
+    VEN: ["venezuela"],
+    CHI: ["chile"],
+    CRC: ["costa rica"],
+    MEX: ["mexico", "méxico"],
+    USA: ["usa", "united states", "estados unidos", "eeuu", "ee.uu."],
+    CAN: ["canada", "canadá"],
+    PAN: ["panama", "panamá"],
+    JAM: ["jamaica"],
+    HON: ["honduras"],
+    HAI: ["haiti", "haití"],
+    ESP: ["spain", "españa"],
+    FRA: ["france", "francia"],
+    GER: ["germany", "alemania"],
+    ITA: ["italy", "italia"],
+    POR: ["portugal"],
+    ENG: ["england", "inglaterra"],
+    NED: ["netherlands", "países bajos", "paises bajos", "holanda"],
+    BEL: ["belgium", "bélgica", "belgica"],
+    CRO: ["croatia", "croacia"],
+    SUI: ["switzerland", "suiza"],
+    DEN: ["denmark", "dinamarca"],
+    AUT: ["austria"],
+    POL: ["poland", "polonia"],
+    SRB: ["serbia"],
+    TUR: ["turkey", "turquía", "turquia"],
+    NOR: ["norway", "noruega"],
+    MAR: ["morocco", "marruecos"],
+    SEN: ["senegal"],
+    EGY: ["egypt", "egipto"],
+    CIV: ["ivory coast", "cote d'ivoire", "côte d’ivoire", "costa de marfil"],
+    ALG: ["algeria", "argelia"],
+    NGA: ["nigeria"],
+    GHA: ["ghana"],
+    TUN: ["tunisia", "túnez", "tunez"],
+    CMR: ["cameroon", "camerún", "camerun"],
+    JPN: ["japan", "japón", "japon"],
+    KOR: ["south korea", "korea republic", "corea", "corea del sur"],
+    IRN: ["iran", "irán"],
+    AUS: ["australia"],
+    QAT: ["qatar", "catar"],
+    KSA: ["saudi arabia", "arabia saudi", "arabia saudita", "arabia"],
+    UZB: ["uzbekistan", "uzbekistán"],
+  };
 
   function readJson(key, fallback) {
     try {
@@ -22,6 +75,26 @@
   function writeJson(key, value) {
     localStorage.setItem(key, JSON.stringify(value));
     window.dispatchEvent(new CustomEvent("prode:data", { detail: { key } }));
+  }
+
+  function normalizeText(value) {
+    return String(value || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+  }
+
+  function teamMatches(code, apiTeam) {
+    const apiCode = normalizeText(apiTeam?.code);
+    const apiName = normalizeText(apiTeam?.name);
+    const localCode = normalizeText(code);
+    const localName = normalizeText(window.TEAMS?.[code]);
+    const aliases = (TEAM_ALIASES[code] || []).map(normalizeText);
+    return [localCode, localName, ...aliases].some((candidate) => (
+      candidate && (candidate === apiCode || candidate === apiName)
+    ));
   }
 
   function initials(name) {
@@ -96,6 +169,103 @@
     return all[matchId];
   }
 
+  function getMatchOverrides() {
+    return readJson(MATCH_OVERRIDES_KEY, {});
+  }
+
+  function getMatches() {
+    const overrides = getMatchOverrides();
+    return (window.MATCHES || []).map((match) => ({
+      ...match,
+      ...(overrides[match.id] || {}),
+    }));
+  }
+
+  async function saveMatchResult(matchId, result) {
+    const overrides = getMatchOverrides();
+    const current = getMatches().find((match) => match.id === matchId) || {};
+    const payload = {
+      ...current,
+      ...result,
+      id: matchId,
+      updatedAt: new Date().toISOString(),
+    };
+    overrides[matchId] = payload;
+    writeJson(MATCH_OVERRIDES_KEY, overrides);
+    try {
+      await window.ProdeDB?.saveMatchResult(matchId, payload);
+    } catch (error) {
+      console.warn("[Prode Refugio] Resultado guardado localmente.", error);
+    }
+    return payload;
+  }
+
+  function findLocalMatch(apiFixture) {
+    return getMatches().find((match) => {
+      const direct = teamMatches(match.a, apiFixture.home) && teamMatches(match.b, apiFixture.away);
+      const reversed = teamMatches(match.a, apiFixture.away) && teamMatches(match.b, apiFixture.home);
+      return direct || reversed;
+    });
+  }
+
+  async function syncLiveMatches() {
+    const status = {
+      ok: false,
+      checkedAt: new Date().toISOString(),
+      matched: 0,
+      configured: false,
+      message: "",
+    };
+
+    try {
+      const response = await fetch("/api/live-matches?live=all", { cache: "no-store" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const payload = await response.json();
+      status.configured = !!payload.configured;
+      if (!payload.ok) {
+        status.message = payload.error || "API-Football sin datos disponibles.";
+        writeJson(LIVE_STATUS_KEY, status);
+        return status;
+      }
+
+      const overrides = getMatchOverrides();
+      (payload.fixtures || []).forEach((fixture) => {
+        const local = findLocalMatch(fixture);
+        if (!local) return;
+        const homeIsLocalA = teamMatches(local.a, fixture.home);
+        overrides[local.id] = {
+          ...local,
+          status: fixture.status,
+          scoreA: homeIsLocalA ? fixture.scoreHome : fixture.scoreAway,
+          scoreB: homeIsLocalA ? fixture.scoreAway : fixture.scoreHome,
+          minute: fixture.minute || local.minute || "",
+          apiFixtureId: fixture.apiFixtureId,
+          apiStatusShort: fixture.statusShort,
+          liveSyncedAt: payload.fetchedAt || new Date().toISOString(),
+        };
+        status.matched += 1;
+      });
+
+      if (status.matched > 0) {
+        writeJson(MATCH_OVERRIDES_KEY, overrides);
+      }
+      status.ok = true;
+      status.message = status.matched > 0
+        ? `${status.matched} partido(s) sincronizado(s).`
+        : "Sin partidos del prode en vivo ahora.";
+      writeJson(LIVE_STATUS_KEY, status);
+      return status;
+    } catch (error) {
+      status.message = error.message || "No se pudo consultar API-Football.";
+      writeJson(LIVE_STATUS_KEY, status);
+      return status;
+    }
+  }
+
+  function getLiveStatus() {
+    return readJson(LIVE_STATUS_KEY, null);
+  }
+
   function getSpecials() {
     return {
       ...(window.MY_SPECIALS || {}),
@@ -140,7 +310,7 @@
   }
 
   function calculateStats(predictions = getPredictions()) {
-    return (window.MATCHES || []).reduce((stats, match) => {
+    return getMatches().reduce((stats, match) => {
       const prediction = predictions[match.id];
       const scored = scorePrediction(match, prediction);
       if (!scored) return stats;
@@ -182,7 +352,7 @@
 
   function getHistory() {
     const predictions = getPredictions();
-    return (window.MATCHES || [])
+    return getMatches()
       .filter((match) => match.status === "finalizado" && predictions[match.id])
       .map((match) => {
         const prediction = predictions[match.id];
@@ -209,6 +379,8 @@
     getPlayer,
     savePlayer,
     clearPlayer,
+    getMatches,
+    saveMatchResult,
     getPredictions,
     savePrediction,
     getSpecials,
@@ -218,6 +390,8 @@
     getRanking,
     getHistory,
     getProfile,
+    syncLiveMatches,
+    getLiveStatus,
     initials,
   };
 })();
