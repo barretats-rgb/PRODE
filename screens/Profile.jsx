@@ -4,6 +4,7 @@
 
 function Profile({ go }) {
   const [version, setVersion] = useState(0);
+  const [rank, setRank] = useState(null);
 
   useEffect(() => {
     const onData = () => setVersion(v => v + 1);
@@ -11,9 +12,19 @@ function Profile({ go }) {
     return () => window.removeEventListener("prode:data", onData);
   }, []);
 
+  // Puesto real: posición del jugador en el ranking general en vivo.
+  useEffect(() => {
+    const myUid = window.ProdeDB?.getUser?.()?.uid;
+    const unsub = window.ProdeDB?.subscribeRanking?.((list) => {
+      const rows = window.ProdeRanking?.rankingRowsFromPlayers?.(list, myUid) || [];
+      const me = rows.find(r => r.you);
+      setRank(me ? me.rank : null);
+    });
+    return () => unsub && unsub();
+  }, []);
+
   const profile = window.ProdeStore?.getProfile?.() || {};
   const player = profile.player || {};
-  const you = profile.row || {};
   const stats = profile.stats || { points: 0, exact: 0, winner: 0 };
   const history = profile.history || [];
   const country = window.TEAMS?.[player.favoriteTeam] || "Costa Rica";
@@ -37,7 +48,7 @@ function Profile({ go }) {
         </div>
 
         <div style={{display:"flex", alignItems:"center", gap:14, marginTop:16}}>
-          <Avatar initials={you.avatar || player.avatar || "TJ"} size={72} tone={player.avatarTone || "citrus"} you/>
+          <Avatar initials={player.avatar || window.ProdeRanking?.initials?.(player.name) || "TJ"} size={72} tone={player.avatarTone || "citrus"} you/>
           <div style={{flex:1, minWidth:0}}>
             <div style={{
               fontFamily:"var(--font-title)", fontSize:22, color:"var(--cream-100)",
@@ -58,7 +69,7 @@ function Profile({ go }) {
           marginTop:18,
           display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8,
         }}>
-          <Stat n={`${you.rank || "-"}°`} l="Posicion" tone="orange"/>
+          <Stat n={rank ? `${rank}°` : "-"} l="Posición" tone="orange"/>
           <Stat n={String(stats.points)} l="Puntos" tone="citrus"/>
           <Stat n={String(stats.exact)} l="Exactos" tone="cream"/>
         </div>
