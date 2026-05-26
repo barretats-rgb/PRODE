@@ -195,6 +195,8 @@
 
   // El admin confirma el resultado final: escribe el partido y reparte puntos a todas las
   // predicciones y agregados (idempotente). Requiere ser admin (las reglas lo exigirán en 2D).
+  // Si un batch falla a mitad de camino el estado queda parcial, pero como el reparto es
+  // idempotente (usa el puntaje previo de cada predicción), volver a confirmar lo recompone.
   async function finalizeMatch(matchId, scoreA, scoreB) {
     if (!state.ready) throw new Error("Firebase no está listo.");
     const finalized = { status: "finalizado", scoreA: Number(scoreA), scoreB: Number(scoreB) };
@@ -210,13 +212,12 @@
     const { perPrediction, perPlayer } = window.ProdeScoring.scoreMatchFanout(finalized, preds);
     // 4) aplicar en batches (≤450 escrituras por batch)
     const inc = window.firebase.firestore.FieldValue.increment;
-    const predById = {};
-    preds.forEach((p) => { predById[p.playerId] = p._id; });
     let batch = state.db.batch();
     let writes = 0;
     const flush = async () => { if (writes > 0) { await batch.commit(); batch = state.db.batch(); writes = 0; } };
     for (const pp of perPrediction) {
-      batch.set(collection("predictions").doc(predById[pp.playerId]), { points: pp.points, kind: pp.kind }, { merge: true });
+      // El id de la predicción siempre es `${playerId}_${matchId}` (ver savePrediction).
+      batch.set(collection("predictions").doc(`${pp.playerId}_${matchId}`), { points: pp.points, kind: pp.kind }, { merge: true });
       if (++writes >= 450) await flush();
     }
     for (const [playerId, d] of Object.entries(perPlayer)) {
