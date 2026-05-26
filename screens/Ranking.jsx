@@ -5,15 +5,22 @@
 function Ranking({ go }) {
   const [scope, setScope] = useState("general"); // general | grupo | staff
   const [highlight, setHighlight] = useState(null);
-  const [version, setVersion] = useState(0);
+  const [players, setPlayers] = useState(null);
 
   useEffect(() => {
-    const onData = () => setVersion(v => v + 1);
-    window.addEventListener("prode:data", onData);
-    return () => window.removeEventListener("prode:data", onData);
+    // Ranking general en vivo desde Firestore (players orderBy points).
+    const unsub = window.ProdeDB?.subscribeRanking?.((list) => setPlayers(list));
+    return () => unsub && unsub();
   }, []);
 
-  const rows = window.ProdeStore?.getRanking?.() || window.RANKING;
+  const myUid = window.ProdeDB?.getUser?.()?.uid;
+  const liveRows = (players && window.ProdeRanking)
+    ? window.ProdeRanking.rankingRowsFromPlayers(players, myUid)
+    : null;
+  // Si todavía no hay datos en vivo, caer al ranking local/demo para no mostrar vacío.
+  const rows = (liveRows && liveRows.length)
+    ? liveRows
+    : (window.ProdeStore?.getRanking?.() || window.RANKING);
   const you = rows.find(r => r.you);
   const podium = rows.slice(0,3);
   const rest = rows.slice(3);
