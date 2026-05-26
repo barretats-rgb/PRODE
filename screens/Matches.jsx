@@ -16,6 +16,7 @@ function Matches({ go }) {
   useEffect(() => {
     const onData = () => {
       setPreds(window.ProdeStore?.getPredictions?.() || { ...window.MY_PREDICTIONS });
+      setNow(Date.now()); // refresca el cierre por horario ante cualquier cambio de datos
       setVersion(v => v + 1);
     };
     window.addEventListener("prode:data", onData);
