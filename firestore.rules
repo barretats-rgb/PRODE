@@ -1,0 +1,85 @@
+rules_version = '2';
+
+// ============================================================
+// PRODE REFUGIO — Reglas de seguridad de Firestore
+//
+// Modelo:
+//  - Admin = email verificado de Google (barrera REAL, server-side).
+//  - Los puntos/agregados de cada jugador SOLO los escribe el admin (el fan-out
+//    de finalizeMatch). Un jugador no puede falsear sus puntos.
+//  - Cada jugador escribe SOLO su propia predicción (sin puntaje) y su propio perfil.
+//  - Los resultados de partidos los confirma SOLO el admin; lectura pública.
+//
+// Pendiente (otros planes):
+//  - Cierre por horario server-side: requiere el kickoffAt del partido en Firestore
+//    (hoy el fixture vive en data.js). Mientras tanto el cierre es sólo en la UI.
+//  - groups/groupMembers: quedan DENEGADOS por defecto hasta el plan de grupos.
+// ============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+    // Lista blanca de administradores (mismo criterio que el cliente, pero acá es la barrera real).
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.email in [
+        'barretats@gmail.com'
+      ];
+    }
+
+    // ---- players: alimentan el ranking ----
+    match /players/{uid} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(uid);
+      // El dueño edita SOLO campos de perfil; nunca sus agregados de puntaje.
+      // El admin puede actualizar cualquier jugador (fan-out de puntos).
+      allow update: if isAdmin()
+        || (isOwner(uid)
+            && request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly(['name','phone','photoURL','email','favoriteTeam',
+                           'avatarTone','avatar','mode','groupName','groupCode','updatedAt']));
+      allow delete: if false;
+    }
+
+    // ---- predictions: doc id = `${uid}_${matchId}` ----
+    match /predictions/{predId} {
+      // El dueño lee la suya; el admin lee todas (para repartir puntos).
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.playerId == request.auth.uid);
+      // El dueño escribe SU predicción y SIN puntaje (points debe ser null);
+      // el admin escribe el puntaje (points/kind) en el fan-out.
+      allow create, update: if isAdmin()
+        || (isSignedIn()
+            && request.resource.data.playerId == request.auth.uid
+            && predId == request.auth.uid + '_' + request.resource.data.matchId
+            && request.resource.data.points == null);
+      allow delete: if false;
+    }
+
+    // ---- matches: resultados oficiales (sin datos personales) ----
+    match /matches/{matchId} {
+      allow read: if true;          // público: marcadores/estado
+      allow write: if isAdmin();    // sólo el staff confirma resultados
+    }
+
+    // ---- specialPredictions: campeón, goleador, etc. ----
+    match /specialPredictions/{uid} {
+      allow read: if isSignedIn();
+      allow create, update: if isOwner(uid) || isAdmin();
+      allow delete: if false;
+    }
+
+    // ---- meta: config y respuestas oficiales de especiales ----
+    match /meta/{doc} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Todo lo no declarado (p.ej. groups/groupMembers) queda denegado por defecto.
+  }
+}

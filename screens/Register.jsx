@@ -21,6 +21,8 @@ function Register({ go }) {
   const finishRegistration = async () => {
     setSaveError("");
     try {
+      // Sólo campos de perfil: los agregados (points/exact/winner) los inicializa
+      // ensurePlayer al crear el doc y sólo el admin los modifica (reglas de Firestore).
       await window.ProdeStore?.savePlayer({
         name,
         phone,
@@ -30,9 +32,6 @@ function Register({ go }) {
         mode,
         groupName: mode === "create" ? groupName : "",
         groupCode: mode === "join" ? code : "",
-        points: 0,
-        exact: 0,
-        winner: 0,
       });
       go("matches");
     } catch (e) {
