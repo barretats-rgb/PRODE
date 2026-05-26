@@ -155,16 +155,7 @@ function DesktopAdmin() {
   }, []);
 
   const saveDesktopScore = (id, side, value) => {
-    setMatches(ms => {
-      const current = ms.find(m => m.id === id) || {};
-      const updated = {...current, [side]: value, status:"finalizado"};
-      window.ProdeStore?.saveMatchResult(id, {
-        status: "finalizado",
-        scoreA: side === "scoreA" ? value : Number(current.scoreA || 0),
-        scoreB: side === "scoreB" ? value : Number(current.scoreB || 0),
-      }).catch((error) => console.warn("[Prode Refugio] No se pudo guardar el resultado.", error));
-      return ms.map(m => m.id === id ? updated : m);
-    });
+    setMatches(ms => ms.map(m => m.id === id ? { ...m, [side]: value } : m));
   };
 
   // Desktop admin keeps the same data model as mobile, but gives the staff a wider table for faster edits.
@@ -256,8 +247,10 @@ function DesktopAdmin() {
               const scoreA = Number(m.scoreA || 0);
               const scoreB = Number(m.scoreB || 0);
               setMatches(ms => ms.map(item => item.id === m.id ? {...item, scoreA, scoreB, status:"finalizado"} : item));
-              window.ProdeStore?.saveMatchResult(m.id, {status:"finalizado", scoreA, scoreB})
-                .catch((error) => console.warn("[Prode Refugio] No se pudo guardar el resultado.", error));
+              const finalize = window.ProdeDB?.finalizeMatch
+                ? window.ProdeDB.finalizeMatch(m.id, scoreA, scoreB)
+                : window.ProdeStore?.saveMatchResult(m.id, {status:"finalizado", scoreA, scoreB});
+              Promise.resolve(finalize).catch((error) => console.warn("[Prode Refugio] No se pudo confirmar el resultado.", error));
             };
             return (
             <div key={m.id} style={{

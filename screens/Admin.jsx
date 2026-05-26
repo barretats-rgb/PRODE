@@ -6,6 +6,7 @@
 function Admin({ go }) {
   const [tab, setTab] = useState("partidos");
   const [matches, setMatches] = useState(window.ProdeStore?.getMatches?.() || window.MATCHES);
+  const [saving, setSaving] = useState(null);
 
   useEffect(() => {
     const onData = () => {
@@ -15,15 +16,26 @@ function Admin({ go }) {
     return () => window.removeEventListener("prode:data", onData);
   }, []);
 
-  const updateScore = (id, side, val) => {
-    setMatches(ms => ms.map(m => m.id === id ? {...m, [side]:val, status:"finalizado"} : m));
-    const current = matches.find(m => m.id === id);
-    window.ProdeStore?.saveMatchResult(id, {
-      [side]: val,
-      status: "finalizado",
-      scoreA: side === "scoreA" ? val : current?.scoreA || 0,
-      scoreB: side === "scoreB" ? val : current?.scoreB || 0,
-    }).catch((error) => console.warn("[Prode Refugio] No se pudo guardar el resultado.", error));
+  // Edita el marcador en memoria (no finaliza ni reparte puntos todavía).
+  const editScore = (id, side, val) => {
+    setMatches(ms => ms.map(m => m.id === id ? { ...m, [side]: Number(val) || 0 } : m));
+  };
+
+  // Confirma el resultado final del partido: escribe + reparte puntos (idempotente).
+  const confirmResult = async (m) => {
+    setSaving(m.id);
+    try {
+      const a = Number(m.scoreA) || 0, b = Number(m.scoreB) || 0;
+      if (window.ProdeDB?.finalizeMatch) {
+        await window.ProdeDB.finalizeMatch(m.id, a, b);
+      } else {
+        await window.ProdeStore?.saveMatchResult(m.id, { status: "finalizado", scoreA: a, scoreB: b });
+      }
+    } catch (e) {
+      console.error("[Prode Refugio] confirmar resultado", e);
+    } finally {
+      setSaving(null);
+    }
   };
 
   return (
@@ -154,9 +166,41 @@ function Admin({ go }) {
             fontFamily:"var(--font-title)", fontSize:20, color:"var(--cream-100)",
             textTransform:"uppercase", letterSpacing:"0.02em", margin:"4px 0 14px",
           }}>Carga manual</h3>
-          {matches.slice(0, 8).map(m => (
-            <ResultCard key={m.id} m={m} onChange={updateScore}/>
-          ))}
+          <div style={{
+            borderRadius:18, overflow:"hidden",
+            background:"var(--char-800)", border:"1px solid var(--char-700)",
+          }}>
+            {matches.slice(0, 12).map((m, i) => (
+              <div key={m.id} style={{
+                padding:"12px 13px",
+                borderBottom: i < 11 ? "1px solid var(--char-700)" : 0,
+                display:"flex", alignItems:"center", gap:10,
+              }}>
+                <Flag code={m.a} size={22}/>
+                <input
+                  type="number"
+                  value={m.scoreA || 0}
+                  onChange={e => editScore(m.id, "scoreA", e.target.value)}
+                  style={scoreInputStyle}
+                />
+                <span style={{color:"var(--char-500)", fontSize:16, fontFamily:"var(--font-title)"}}>–</span>
+                <input
+                  type="number"
+                  value={m.scoreB || 0}
+                  onChange={e => editScore(m.id, "scoreB", e.target.value)}
+                  style={scoreInputStyle}
+                />
+                <Flag code={m.b} size={22}/>
+                <Btn
+                  size="sm"
+                  variant="accent"
+                  onClick={() => confirmResult(m)}
+                >
+                  {saving === m.id ? "Guardando..." : (m.status === "finalizado" ? "Recalcular" : "Confirmar")}
+                </Btn>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -361,6 +405,13 @@ const inputStepper = {
   background:"var(--char-900)", color:"var(--cream-100)",
   border:"1.5px solid var(--neon-citrus)", outline:"none",
   fontFamily:"var(--font-title)", fontSize:18, textAlign:"center",
+};
+
+const scoreInputStyle = {
+  width:42, height:34, borderRadius:8,
+  background:"var(--char-900)", color:"var(--cream-100)",
+  border:"1px solid var(--char-600)", outline:"none",
+  fontFamily:"var(--font-title)", fontSize:15, textAlign:"center",
 };
 
 function ToggleSwitch({ on:initOn }) {
