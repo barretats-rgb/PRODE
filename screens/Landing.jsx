@@ -213,7 +213,7 @@ function Landing({ go }) {
         <div style={{
           textAlign:"center", marginTop:10, fontSize:11, color:"var(--char-400)",
           letterSpacing:"0.06em",
-        }}>Ya somos <span style={{color:"var(--neon-citrus)"}}>247 jugadores</span> · Tamarindo</div>
+        }}>El prode del <span style={{color:"var(--neon-citrus)"}}>Refugio</span> · Tamarindo</div>
       </div>
     </div>
   );

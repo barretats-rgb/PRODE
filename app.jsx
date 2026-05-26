@@ -73,12 +73,20 @@ function App() {
   const isDesktop = useIsDesktop();
   // Estado de sesión: undefined = cargando, null = sin sesión, objeto = sesión activa.
   const [auth, setAuth] = useState(undefined);
+  const [playerCount, setPlayerCount] = useState(null);
 
   useEffect(() => {
     window.ProdeDB?.init();
     const unsub = window.ProdeDB?.onAuthChange?.((s) => setAuth(s));
     return () => unsub && unsub();
   }, []);
+
+  // Conteo real de jugadores (sólo con sesión, porque players requiere estar logueado).
+  useEffect(() => {
+    if (!auth?.user) return;
+    const unsub = window.ProdeDB?.subscribePlayerCount?.(setPlayerCount);
+    return () => unsub && unsub();
+  }, [auth?.user?.uid]);
 
   useEffect(() => {
     if (window.lucide) window.lucide.createIcons();
@@ -129,7 +137,9 @@ function App() {
         <AppNav screen={screen} go={go} isAdmin={isAdmin}/>
         <div className="app-side-card">
           <Eyebrow color="var(--neon-citrus)">Estado</Eyebrow>
-          <div style={{fontFamily:"var(--font-title)",fontSize:18,color:"var(--cream-100)",textTransform:"uppercase",marginTop:5}}>247 jugadores</div>
+          <div style={{fontFamily:"var(--font-title)",fontSize:18,color:"var(--cream-100)",textTransform:"uppercase",marginTop:5}}>
+            {playerCount == null ? "—" : playerCount} {playerCount === 1 ? "jugador" : "jugadores"}
+          </div>
           <div style={{fontSize:11,color:"var(--char-400)",marginTop:4}}>Modo manual: resultados cargados desde Admin.</div>
         </div>
       </aside>
@@ -179,19 +189,15 @@ function DesktopAdmin() {
           fontSize:9, letterSpacing:"0.22em", textTransform:"uppercase",
           color:"var(--char-400)", fontWeight:700, padding:"4px 8px",
         }}>Panel</div>
-        {["Dashboard","Partidos","Resultados","Jugadores","Anuncios","Premios","Reportes"].map((it,i) => (
-          <button key={it} style={{
-            display:"flex", alignItems:"center", gap:10,
-            padding:"9px 12px", borderRadius:10, cursor:"pointer", textAlign:"left",
-            background: i===1 ? "var(--char-700)" : "transparent",
-            border: i===1 ? "1px solid var(--neon-citrus)" : "1px solid transparent",
-            color:"var(--cream-100)",
-            fontSize:12, fontWeight:600, fontFamily:"var(--font-body)",
-          }}>
-            <i data-lucide={["layout-dashboard","goal","check-check","users","megaphone","gift","bar-chart-3"][i]} style={{width:14,height:14}}></i>
-            {it}
-          </button>
-        ))}
+        <div style={{
+          display:"flex", alignItems:"center", gap:10,
+          padding:"9px 12px", borderRadius:10, textAlign:"left",
+          background:"var(--char-700)", border:"1px solid var(--neon-citrus)",
+          color:"var(--cream-100)", fontSize:12, fontWeight:600, fontFamily:"var(--font-body)",
+        }}>
+          <i data-lucide="check-check" style={{width:14,height:14}}></i>
+          Resultados
+        </div>
         <div style={{flex:1}}/>
         <div style={{
           padding:"10px 12px", borderRadius:10, background:"var(--char-900)",
@@ -200,33 +206,22 @@ function DesktopAdmin() {
         }}>
           <Avatar initials="R" size={28} tone="orange"/>
           <div style={{flex:1, minWidth:0}}>
-            <div style={{fontSize:11, color:"var(--cream-100)", fontWeight:700}}>Refugio Staff</div>
-            <div style={{fontSize:9, color:"var(--char-400)", letterSpacing:"0.04em"}}>admin@refugio.cr</div>
+            <div style={{fontSize:11, color:"var(--cream-100)", fontWeight:700}}>Staff Refugio</div>
+            <div style={{fontSize:9, color:"var(--char-400)", letterSpacing:"0.04em"}}>Admin</div>
           </div>
         </div>
       </aside>
 
       <main style={{padding:"22px 28px", overflow:"auto"}}>
-        <div style={{display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:18}}>
-          <div>
-            <Eyebrow color="var(--neon-citrus)">Hoy · 11 Jun 2026</Eyebrow>
-            <h1 style={{
-              fontFamily:"var(--font-title)", fontSize:36, color:"var(--cream-100)",
-              textTransform:"uppercase", letterSpacing:"0.02em", margin:"4px 0 0",
-            }}>Carga manual de resultados</h1>
+        <div style={{marginBottom:18}}>
+          <Eyebrow color="var(--neon-citrus)">Panel · Tamarindo</Eyebrow>
+          <h1 style={{
+            fontFamily:"var(--font-title)", fontSize:36, color:"var(--cream-100)",
+            textTransform:"uppercase", letterSpacing:"0.02em", margin:"4px 0 0",
+          }}>Carga manual de resultados</h1>
+          <div style={{fontSize:12, color:"var(--char-400)", marginTop:8}}>
+            Cargá el marcador y tocá el ✓ para confirmar: se reparten los puntos y se actualiza el ranking.
           </div>
-          <div style={{display:"flex", gap:8}}>
-            <Btn variant="ghost" size="md" icon="download">Exportar</Btn>
-            <Btn variant="accent" size="md" icon="plus">Nuevo partido</Btn>
-          </div>
-        </div>
-
-        {/* KPI row */}
-        <div style={{display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:12, marginBottom:20}}>
-          <DKPI v="247"  l="Jugadores activos"  delta="+18 hoy"   tone="citrus"/>
-          <DKPI v="1,432" l="Predicciones J1"    delta="+312 hoy"  tone="orange"/>
-          <DKPI v="Manual"  l="Resultados"  delta="ranking activo" tone="sage"/>
-          <DKPI v="$840" l="Premios entregados"  delta="3 esta sem" tone="tan"/>
         </div>
 
         {/* table */}
@@ -293,45 +288,6 @@ function DesktopAdmin() {
           )})}
         </div>
 
-        {/* announcement composer */}
-        <div style={{
-          marginTop:20, padding:16, borderRadius:14,
-          background:"var(--char-800)", border:"1px solid var(--char-700)",
-          display:"grid", gridTemplateColumns:"1fr 280px", gap:16,
-        }}>
-          <div>
-            <Eyebrow color="var(--neon-citrus)">Nuevo anuncio</Eyebrow>
-            <textarea placeholder="Hoy Argentina vs Croacia en pantalla gigante..." style={{
-              marginTop:8, width:"100%", padding:12, borderRadius:10,
-              background:"var(--char-900)", color:"var(--cream-100)",
-              border:"1px solid var(--char-700)", outline:"none", resize:"none",
-              fontFamily:"var(--font-body)", fontSize:13, minHeight:80, boxSizing:"border-box",
-            }}/>
-            <div style={{display:"flex", gap:6, marginTop:10, alignItems:"center"}}>
-              <Pill tone="open">AHORA</Pill>
-              <Pill tone="ghost">PROMO</Pill>
-              <Pill tone="ghost">FECHA</Pill>
-              <div style={{flex:1}}/>
-              <Btn variant="accent" size="sm" icon="send">Publicar</Btn>
-            </div>
-          </div>
-          <div>
-            <Eyebrow color="var(--char-200)">Activos · 3</Eyebrow>
-            <div style={{marginTop:8, display:"flex", flexDirection:"column", gap:6}}>
-              {window.ANNOUNCEMENTS.map(a => (
-                <div key={a.id} style={{
-                  padding:"8px 10px", borderRadius:10,
-                  background:"var(--char-900)", border:"1px solid var(--char-700)",
-                  fontSize:11, display:"flex", alignItems:"center", gap:8,
-                }}>
-                  <i data-lucide={a.icon} style={{width:12,height:12,color:"var(--neon-citrus)"}}></i>
-                  <span style={{color:"var(--cream-100)", flex:1, fontWeight:600}}>{a.title}</span>
-                  <span style={{fontSize:9, color:"var(--char-400)", letterSpacing:"0.1em"}}>{a.tag}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
       </main>
     </div>
   );
@@ -343,24 +299,5 @@ const desktopScoreInput = {
   border:"1px solid var(--char-600)", outline:"none",
   fontFamily:"var(--font-title)", fontSize:16, textAlign:"center",
 };
-
-function DKPI({ v, l, delta, tone }) {
-  const colors = {
-    citrus:"var(--neon-citrus)", orange:"var(--orange-400)",
-    sage:"var(--sage-300)", tan:"var(--tan-300)",
-  };
-  return (
-    <div style={{
-      padding:"14px 16px", borderRadius:14,
-      background:"var(--char-800)", border:"1px solid var(--char-700)",
-    }}>
-      <Eyebrow color="var(--char-200)" style={{fontSize:9}}>{l}</Eyebrow>
-      <div style={{
-        fontFamily:"var(--font-title)", fontSize:32, color:colors[tone], lineHeight:1, marginTop:6,
-      }}>{v}</div>
-      <div style={{fontSize:10, color:"var(--char-400)", marginTop:5, letterSpacing:"0.06em"}}>↑ {delta}</div>
-    </div>
-  );
-}
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App/>);

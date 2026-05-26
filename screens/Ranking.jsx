@@ -3,7 +3,6 @@
    ============================================================ */
 
 function Ranking({ go }) {
-  const [scope, setScope] = useState("general"); // general | grupo | staff
   const [highlight, setHighlight] = useState(null);
   const [players, setPlayers] = useState(null);
 
@@ -14,75 +13,75 @@ function Ranking({ go }) {
   }, []);
 
   const myUid = window.ProdeDB?.getUser?.()?.uid;
-  const liveRows = (players && window.ProdeRanking)
+  const loading = players === null;            // null = aún no llegó el primer snapshot
+  const rows = (players && window.ProdeRanking)
     ? window.ProdeRanking.rankingRowsFromPlayers(players, myUid)
-    : null;
-  // Si todavía no hay datos en vivo, caer al ranking local/demo para no mostrar vacío.
-  const rows = (liveRows && liveRows.length)
-    ? liveRows
-    : (window.ProdeStore?.getRanking?.() || window.RANKING);
+    : [];                                       // sin datos reales: vacío (nada de demo)
   const you = rows.find(r => r.you);
-  const podium = rows.slice(0,3);
+  const podium = rows.slice(0, 3);
   const rest = rows.slice(3);
 
   return (
     <div style={{paddingBottom: 20}}>
       <AppBar title="Ranking" subtitle="Mundial 2026 · Refugio Tamarindo"/>
 
-      {/* scope chips */}
-      <div style={{padding:"4px 16px 0", display:"flex", gap:7}}>
-        {[
-          {id:"general", label:"General", count:247},
-          {id:"grupo",   label:"Mi mesa", count:14},
-          {id:"staff",   label:"Staff",   count:11},
-        ].map(s => {
-          const on = scope === s.id;
-          return (
-            <button key={s.id} onClick={()=>setScope(s.id)} style={{
-              flex:1, padding:"10px 8px", borderRadius:14,
-              border:`1px solid ${on ? "var(--neon-citrus)" : "var(--char-600)"}`,
-              background: on ? "var(--char-700)" : "transparent",
-              color:"var(--cream-100)", cursor:"pointer", textAlign:"center",
-            }}>
-              <div style={{
-                fontFamily:"var(--font-title)", fontSize:15, lineHeight:1,
-                color: on ? "var(--neon-citrus)" : "var(--cream-100)",
-                textTransform:"uppercase", letterSpacing:"0.02em",
-              }}>{s.label}</div>
-              <div style={{
-                fontSize:9, color:"var(--char-400)", marginTop:4,
-                letterSpacing:"0.18em", fontWeight:600,
-              }}>{s.count} JUGS</div>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* podium */}
-      <div style={{padding:"22px 16px 0"}}>
-        <div style={{
-          display:"grid", gridTemplateColumns:"1fr 1.15fr 1fr",
-          alignItems:"end", gap:8,
-        }}>
-          <PodiumCol player={podium[1]} pos={2} h={108} tone="char"/>
-          <PodiumCol player={podium[0]} pos={1} h={132} tone="citrus"/>
-          <PodiumCol player={podium[2]} pos={3} h={92}  tone="orange"/>
-        </div>
-      </div>
-
-      {/* phrase */}
-      <div style={{padding:"18px 16px 0"}}>
+      {/* total real de jugadores */}
+      <div style={{padding:"8px 16px 0"}}>
         <div style={{
           padding:"10px 14px", borderRadius:14,
-          background:"rgba(232,242,106,0.08)", border:"1px solid rgba(232,242,106,0.18)",
-          display:"flex", alignItems:"center", gap:10,
+          background:"var(--char-800)", border:"1px solid var(--char-700)",
+          display:"flex", alignItems:"center", justifyContent:"space-between",
         }}>
-          <i data-lucide="flame" style={{width:16,height:16,color:"var(--neon-coral)"}}></i>
-          <div style={{flex:1, fontSize:12, color:"var(--cream-100)", letterSpacing:"0.04em"}}>
-            <span style={{color:"var(--neon-citrus)", fontWeight:700}}>Ranking caliente,</span> cerveza fría.
+          <div style={{
+            fontFamily:"var(--font-title)", fontSize:15, color:"var(--neon-citrus)",
+            textTransform:"uppercase", letterSpacing:"0.02em",
+          }}>General</div>
+          <div style={{fontSize:11, color:"var(--char-300)", letterSpacing:"0.12em", fontWeight:700}}>
+            {rows.length} {rows.length === 1 ? "JUGADOR" : "JUGADORES"}
           </div>
         </div>
       </div>
+
+      {/* estado cargando / vacío */}
+      {(loading || rows.length === 0) && (
+        <div style={{padding:"30px 22px", textAlign:"center"}}>
+          <div style={{fontSize:13, color:"var(--char-300)", lineHeight:1.5, maxWidth:320, margin:"0 auto"}}>
+            {loading
+              ? "Cargando ranking..."
+              : "Todavía no hay nadie en el ranking. Cargá tus predicciones y, cuando se confirme un resultado, vas a aparecer acá."}
+          </div>
+        </div>
+      )}
+
+      {/* podium */}
+      {rows.length > 0 && (
+        <div style={{padding:"22px 16px 0"}}>
+          <div style={{
+            display:"grid", gridTemplateColumns:"1fr 1.15fr 1fr",
+            alignItems:"end", gap:8,
+          }}>
+            <PodiumCol player={podium[1]} pos={2} h={108} tone="char"/>
+            <PodiumCol player={podium[0]} pos={1} h={132} tone="citrus"/>
+            <PodiumCol player={podium[2]} pos={3} h={92}  tone="orange"/>
+          </div>
+        </div>
+      )}
+
+      {/* phrase */}
+      {rows.length > 0 && (
+        <div style={{padding:"18px 16px 0"}}>
+          <div style={{
+            padding:"10px 14px", borderRadius:14,
+            background:"rgba(232,242,106,0.08)", border:"1px solid rgba(232,242,106,0.18)",
+            display:"flex", alignItems:"center", gap:10,
+          }}>
+            <i data-lucide="flame" style={{width:16,height:16,color:"var(--neon-coral)"}}></i>
+            <div style={{flex:1, fontSize:12, color:"var(--cream-100)", letterSpacing:"0.04em"}}>
+              <span style={{color:"var(--neon-citrus)", fontWeight:700}}>Ranking caliente,</span> cerveza fría.
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* you sticky */}
       {you && (
@@ -117,22 +116,24 @@ function Ranking({ go }) {
       )}
 
       {/* table */}
-      <div style={{padding:"10px 16px 0"}}>
-        <div style={{
-          display:"grid", gridTemplateColumns:"30px 1fr 50px 50px 40px",
-          gap:6, padding:"6px 8px 8px",
-          borderBottom:"1px solid var(--char-700)",
-        }}>
-          <Eyebrow color="var(--char-500)" style={{fontSize:8}}>#</Eyebrow>
-          <Eyebrow color="var(--char-500)" style={{fontSize:8}}>Jugador</Eyebrow>
-          <Eyebrow color="var(--char-500)" style={{fontSize:8, textAlign:"center"}}>Exa</Eyebrow>
-          <Eyebrow color="var(--char-500)" style={{fontSize:8, textAlign:"center"}}>Win</Eyebrow>
-          <Eyebrow color="var(--char-500)" style={{fontSize:8, textAlign:"right"}}>Pts</Eyebrow>
+      {rows.length > 0 && (
+        <div style={{padding:"10px 16px 0"}}>
+          <div style={{
+            display:"grid", gridTemplateColumns:"30px 1fr 50px 50px 40px",
+            gap:6, padding:"6px 8px 8px",
+            borderBottom:"1px solid var(--char-700)",
+          }}>
+            <Eyebrow color="var(--char-500)" style={{fontSize:8}}>#</Eyebrow>
+            <Eyebrow color="var(--char-500)" style={{fontSize:8}}>Jugador</Eyebrow>
+            <Eyebrow color="var(--char-500)" style={{fontSize:8, textAlign:"center"}}>Exa</Eyebrow>
+            <Eyebrow color="var(--char-500)" style={{fontSize:8, textAlign:"center"}}>Win</Eyebrow>
+            <Eyebrow color="var(--char-500)" style={{fontSize:8, textAlign:"right"}}>Pts</Eyebrow>
+          </div>
+          {rest.map((r) => (
+            <RankRow key={r.rank} r={r} expanded={highlight===r.rank} onClick={()=>setHighlight(highlight===r.rank?null:r.rank)}/>
+          ))}
         </div>
-        {rest.map((r) => (
-          <RankRow key={r.rank} r={r} expanded={highlight===r.rank} onClick={()=>setHighlight(highlight===r.rank?null:r.rank)}/>
-        ))}
-      </div>
+      )}
 
       {/* badges legend */}
       <div style={{padding:"22px 16px 0"}}>

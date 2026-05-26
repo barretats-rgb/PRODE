@@ -206,10 +206,18 @@
 
   // Ranking en vivo: players ordenados por puntos. cb recibe el array de players. Devuelve unsub.
   function subscribeRanking(cb, max = 50) {
-    if (!state.ready) { cb(window.RANKING || []); return () => {}; }
+    if (!state.ready) { cb([]); return () => {}; }
     return collection("players").orderBy("points", "desc").limit(max).onSnapshot((snap) => {
       cb(snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
     }, (e) => console.error("[Prode Refugio] ranking snapshot", e));
+  }
+
+  // Conteo real de jugadores en vivo. cb recibe un número. Devuelve unsub.
+  function subscribePlayerCount(cb) {
+    if (!state.ready) { cb(null); return () => {}; }
+    return collection("players").onSnapshot(
+      (snap) => cb(snap.size),
+      (e) => console.error("[Prode Refugio] player count snapshot", e));
   }
 
   // El admin confirma el resultado final: escribe el partido y reparte puntos a todas las
@@ -266,6 +274,7 @@
     saveMatchResult,
     getMatchResults,
     subscribeRanking,
+    subscribePlayerCount,
     finalizeMatch,
   };
 })();
