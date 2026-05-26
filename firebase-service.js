@@ -13,7 +13,7 @@
     window.FIREBASE_CONFIG.projectId &&
     window.FIREBASE_CONFIG.projectId !== placeholderProject;
 
-  const state = { ready: false, user: null, player: null, db: null, auth: null };
+  const state = { ready: false, user: null, player: null, db: null, auth: null, matchResults: {} };
   const listeners = new Set();
 
   function firestoreNow() {
@@ -84,6 +84,14 @@
     state.ready = true;
     // Tras ready, onAuthStateChanged resuelve la sesión async; el estado transitorio
     // "ready && user:null" es esperado y lo maneja el gate de la UI (muestra Login).
+
+    // Resultados oficiales (los carga el admin). Se cachean y se avisa a la UI con prode:data.
+    collection("matches").onSnapshot((snap) => {
+      const next = {};
+      snap.forEach((doc) => { next[doc.id] = { id: doc.id, ...doc.data() }; });
+      state.matchResults = next;
+      window.dispatchEvent(new CustomEvent("prode:data", { detail: { key: "matches" } }));
+    }, (e) => console.error("[Prode Refugio] matches snapshot", e));
 
     state.auth.onAuthStateChanged(async (user) => {
       if (user) {
@@ -173,6 +181,54 @@
     return { offline: false };
   }
 
+  function getMatchResults() {
+    return state.matchResults;
+  }
+
+  // Ranking en vivo: players ordenados por puntos. cb recibe el array de players. Devuelve unsub.
+  function subscribeRanking(cb, max = 50) {
+    if (!state.ready) { cb(window.RANKING || []); return () => {}; }
+    return collection("players").orderBy("points", "desc").limit(max).onSnapshot((snap) => {
+      cb(snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+    }, (e) => console.error("[Prode Refugio] ranking snapshot", e));
+  }
+
+  // El admin confirma el resultado final: escribe el partido y reparte puntos a todas las
+  // predicciones y agregados (idempotente). Requiere ser admin (las reglas lo exigirán en 2D).
+  async function finalizeMatch(matchId, scoreA, scoreB) {
+    if (!state.ready) throw new Error("Firebase no está listo.");
+    const finalized = { status: "finalizado", scoreA: Number(scoreA), scoreB: Number(scoreB) };
+    // 1) escribir el resultado del partido
+    await collection("matches").doc(matchId).set({ ...finalized, updatedAt: firestoreNow() }, { merge: true });
+    // 2) leer todas las predicciones del partido
+    const snap = await collection("predictions").where("matchId", "==", matchId).get();
+    const preds = snap.docs.map((doc) => {
+      const d = doc.data();
+      return { _id: doc.id, playerId: d.playerId, a: d.scoreA, b: d.scoreB, points: d.points ?? null, kind: d.kind ?? null };
+    });
+    // 3) calcular el reparto (puro, testeado)
+    const { perPrediction, perPlayer } = window.ProdeScoring.scoreMatchFanout(finalized, preds);
+    // 4) aplicar en batches (≤450 escrituras por batch)
+    const inc = window.firebase.firestore.FieldValue.increment;
+    const predById = {};
+    preds.forEach((p) => { predById[p.playerId] = p._id; });
+    let batch = state.db.batch();
+    let writes = 0;
+    const flush = async () => { if (writes > 0) { await batch.commit(); batch = state.db.batch(); writes = 0; } };
+    for (const pp of perPrediction) {
+      batch.set(collection("predictions").doc(predById[pp.playerId]), { points: pp.points, kind: pp.kind }, { merge: true });
+      if (++writes >= 450) await flush();
+    }
+    for (const [playerId, d] of Object.entries(perPlayer)) {
+      batch.set(collection("players").doc(playerId), {
+        points: inc(d.points), exact: inc(d.exact), winner: inc(d.winner), played: inc(d.played),
+      }, { merge: true });
+      if (++writes >= 450) await flush();
+    }
+    await flush();
+    return { matched: perPrediction.length };
+  }
+
   window.ProdeDB = {
     init,
     onAuthChange,
@@ -188,5 +244,8 @@
     saveSpecials,
     loadRanking,
     saveMatchResult,
+    getMatchResults,
+    subscribeRanking,
+    finalizeMatch,
   };
 })();
