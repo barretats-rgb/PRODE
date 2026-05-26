@@ -155,6 +155,7 @@
     return {
       ...(window.MY_PREDICTIONS || {}),
       ...readJson(PREDICTIONS_KEY, {}),
+      ...(window.ProdeDB?.getMyPredictions?.() || {}), // Firestore (read-back) gana
     };
   }
 
