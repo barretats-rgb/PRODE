@@ -117,6 +117,7 @@
             const next = {};
             snap.forEach((doc) => {
               const d = doc.data();
+              if (!d.matchId) return; // doc sin matchId: lo ignoramos (no contamina el cache)
               next[d.matchId] = { a: d.scoreA, b: d.scoreB, points: d.points ?? null, kind: d.kind ?? null };
             });
             state.myPredictions = next;
