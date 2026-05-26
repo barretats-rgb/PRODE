@@ -13,7 +13,7 @@
     window.FIREBASE_CONFIG.projectId &&
     window.FIREBASE_CONFIG.projectId !== placeholderProject;
 
-  const state = { ready: false, user: null, player: null, db: null, auth: null, matchResults: {} };
+  const state = { ready: false, user: null, player: null, db: null, auth: null, matchResults: {}, myPredictions: {}, myPredsUnsub: null };
   const listeners = new Set();
 
   function firestoreNow() {
@@ -105,13 +105,27 @@
     }, (e) => console.error("[Prode Refugio] matches snapshot", e));
 
     state.auth.onAuthStateChanged(async (user) => {
+      if (state.myPredsUnsub) { state.myPredsUnsub(); state.myPredsUnsub = null; }
       if (user) {
         state.user = user;
         try { await ensurePlayer(user); }
         catch (e) { console.error("[Prode Refugio] ensurePlayer falló", e); }
+        // Read-back: mis predicciones en vivo (las veo en cualquier dispositivo).
+        state.myPredsUnsub = collection("predictions")
+          .where("playerId", "==", user.uid)
+          .onSnapshot((snap) => {
+            const next = {};
+            snap.forEach((doc) => {
+              const d = doc.data();
+              next[d.matchId] = { a: d.scoreA, b: d.scoreB, points: d.points ?? null, kind: d.kind ?? null };
+            });
+            state.myPredictions = next;
+            window.dispatchEvent(new CustomEvent("prode:data", { detail: { key: "myPredictions" } }));
+          }, (e) => console.error("[Prode Refugio] mis predicciones snapshot", e));
       } else {
         state.user = null;
         state.player = null;
+        state.myPredictions = {};
       }
       notify();
     });
@@ -204,6 +218,10 @@
     return state.matchResults;
   }
 
+  function getMyPredictions() {
+    return state.myPredictions;
+  }
+
   // Ranking en vivo: players ordenados por puntos. cb recibe el array de players. Devuelve unsub.
   function subscribeRanking(cb, max = 50) {
     if (!state.ready) { cb([]); return () => {}; }
@@ -273,6 +291,7 @@
     loadRanking,
     saveMatchResult,
     getMatchResults,
+    getMyPredictions,
     subscribeRanking,
     subscribePlayerCount,
     finalizeMatch,
