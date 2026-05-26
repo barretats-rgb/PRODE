@@ -356,57 +356,6 @@ function KPI({ v, l, delta, tone }) {
   );
 }
 
-function ResultCard({ m, onChange }) {
-  const statusLabel = m.status === "finalizado" ? "FT" : m.status === "vivo" ? `VIVO - ${m.minute}` : "MANUAL";
-  const statusTone = m.status === "finalizado" ? "done" : m.status === "vivo" ? "live" : "open";
-  const saveCurrent = () => {
-    onChange(m.id, "scoreA", Number(m.scoreA || 0));
-    onChange(m.id, "scoreB", Number(m.scoreB || 0));
-  };
-
-  return (
-    <div style={{
-      padding:"14px", borderRadius:18,
-      background:"linear-gradient(180deg, rgba(255,122,61,0.06), rgba(255,122,61,0) 80%), var(--char-800)",
-      border:"1px solid var(--neon-coral)",
-    }}>
-      <div style={{display:"flex", justifyContent:"space-between", alignItems:"center"}}>
-        <Eyebrow color="var(--char-400)">{m.phase}</Eyebrow>
-        <Pill tone={statusTone}>{statusLabel}</Pill>
-      </div>
-      <div style={{
-        marginTop:12,
-        display:"grid", gridTemplateColumns:"1fr 90px 1fr", alignItems:"center", gap:6,
-      }}>
-        <div style={{display:"flex", alignItems:"center", gap:9}}>
-          <Flag code={m.a} size={28}/>
-          <span style={{fontFamily:"var(--font-title)", fontSize:14, color:"var(--cream-100)"}}>{window.TEAMS[m.a]}</span>
-        </div>
-        <div style={{display:"flex", alignItems:"center", justifyContent:"center", gap:5}}>
-          <input type="number" value={m.scoreA||0} onChange={e=>onChange(m.id,"scoreA",+e.target.value)} style={inputStepper}/>
-          <span style={{color:"var(--char-500)", fontSize:18}}>–</span>
-          <input type="number" value={m.scoreB||0} onChange={e=>onChange(m.id,"scoreB",+e.target.value)} style={inputStepper}/>
-        </div>
-        <div style={{display:"flex", alignItems:"center", gap:9, justifyContent:"flex-end"}}>
-          <span style={{fontFamily:"var(--font-title)", fontSize:14, color:"var(--cream-100)"}}>{window.TEAMS[m.b]}</span>
-          <Flag code={m.b} size={28}/>
-        </div>
-      </div>
-      <div style={{display:"flex", gap:7, marginTop:12}}>
-        <Btn variant="primary" size="sm" icon="check" style={{flex:1}} onClick={saveCurrent}>Guardar</Btn>
-        <Btn variant="ghost" size="sm" icon="flag" style={{flex:1}} onClick={saveCurrent}>Finalizar</Btn>
-      </div>
-    </div>
-  );
-}
-
-const inputStepper = {
-  width:44, height:44, borderRadius:10,
-  background:"var(--char-900)", color:"var(--cream-100)",
-  border:"1.5px solid var(--neon-citrus)", outline:"none",
-  fontFamily:"var(--font-title)", fontSize:18, textAlign:"center",
-};
-
 const scoreInputStyle = {
   width:42, height:34, borderRadius:8,
   background:"var(--char-900)", color:"var(--cream-100)",
