@@ -27,15 +27,23 @@ service cloud.firestore {
     }
     // Lista blanca de administradores (mismo criterio que el cliente, pero acá es la barrera real).
     function isAdmin() {
-      return isSignedIn() && request.auth.token.email in [
-        'barretats@gmail.com'
-      ];
+      return isSignedIn()
+        && request.auth.token.email_verified == true
+        && request.auth.token.email in [
+          'barretats@gmail.com'
+        ];
     }
 
     // ---- players: alimentan el ranking ----
     match /players/{uid} {
       allow read: if isSignedIn();
-      allow create: if isOwner(uid);
+      // El alta sólo la hace el dueño y con los agregados en 0 (no puede auto-asignarse puntos).
+      allow create: if isOwner(uid)
+        && request.resource.data.points == 0
+        && request.resource.data.exact == 0
+        && request.resource.data.winner == 0
+        && request.resource.data.played == 0
+        && request.resource.data.specialsPoints == 0;
       // El dueño edita SOLO campos de perfil; nunca sus agregados de puntaje.
       // El admin puede actualizar cualquier jugador (fan-out de puntos).
       allow update: if isAdmin()
