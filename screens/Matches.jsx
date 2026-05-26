@@ -7,6 +7,11 @@ function Matches({ go }) {
   const [preds, setPreds] = useState(window.ProdeStore?.getPredictions?.() || { ...window.MY_PREDICTIONS });
   const [toast, setToast] = useState(null);
   const [version, setVersion] = useState(0);
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 30000);
+    return () => clearInterval(t);
+  }, []);
 
   useEffect(() => {
     const onData = () => {
@@ -18,6 +23,8 @@ function Matches({ go }) {
   }, []);
 
   const setPred = async (id, val) => {
+    const match = (window.ProdeStore?.getMatches?.() || window.MATCHES).find(m => m.id === id);
+    if (match && window.ProdeScoring?.isLocked?.(match, Date.now())) return; // cerrado: no se edita
     setPreds(p => ({ ...p, [id]: val }));
     setToast("Guardado");
     window.ProdeStore?.savePrediction(id, val).catch((error) => {
@@ -117,7 +124,7 @@ function Matches({ go }) {
               <MatchRow key={m.id} match={m}
                 prediction={preds[m.id]}
                 onChange={(v)=>setPred(m.id, v)}
-                locked={m.status !== "abierto"}/>
+                locked={window.ProdeScoring?.isLocked?.(m, now) ?? (m.status !== "abierto")}/>
             ))}
           </div>
         ))}
