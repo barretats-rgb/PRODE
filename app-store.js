@@ -181,9 +181,11 @@
 
   function getMatches() {
     const overrides = getMatchOverrides();
+    const remote = window.ProdeDB?.getMatchResults?.() || {};
     return (window.MATCHES || []).map((match) => ({
       ...match,
       ...(overrides[match.id] || {}),
+      ...(remote[match.id] || {}),
     }));
   }
 
