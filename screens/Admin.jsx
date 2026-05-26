@@ -167,14 +167,16 @@ function Admin({ go }) {
                 <Flag code={m.a} size={22}/>
                 <input
                   type="number"
-                  value={m.scoreA || 0}
+                  value={m.scoreA ?? ""}
+                  placeholder="X"
                   onChange={e => editScore(m.id, "scoreA", e.target.value)}
                   style={scoreInputStyle}
                 />
                 <span style={{color:"var(--char-500)", fontSize:16, fontFamily:"var(--font-title)"}}>–</span>
                 <input
                   type="number"
-                  value={m.scoreB || 0}
+                  value={m.scoreB ?? ""}
+                  placeholder="X"
                   onChange={e => editScore(m.id, "scoreB", e.target.value)}
                   style={scoreInputStyle}
                 />

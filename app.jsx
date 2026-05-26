@@ -264,9 +264,9 @@ function DesktopAdmin() {
                 <Flag code={m.b} size={20}/>
               </div>
               <div style={{display:"flex", alignItems:"center", gap:6}}>
-                <input type="number" value={m.scoreA || 0} onChange={e=>saveDesktopScore(m.id,"scoreA",Number(e.target.value || 0))} style={desktopScoreInput}/>
-                <span style={{color:"var(--char-500)", fontFamily:"var(--font-title)"}}>?</span>
-                <input type="number" value={m.scoreB || 0} onChange={e=>saveDesktopScore(m.id,"scoreB",Number(e.target.value || 0))} style={desktopScoreInput}/>
+                <input type="number" value={m.scoreA ?? ""} placeholder="X" onChange={e=>saveDesktopScore(m.id,"scoreA",Number(e.target.value || 0))} style={desktopScoreInput}/>
+                <span style={{color:"var(--char-500)", fontFamily:"var(--font-title)"}}>–</span>
+                <input type="number" value={m.scoreB ?? ""} placeholder="X" onChange={e=>saveDesktopScore(m.id,"scoreB",Number(e.target.value || 0))} style={desktopScoreInput}/>
               </div>
               <div>
                 {m.status === "vivo" ? <Pill tone="live">VIVO - {m.minute}</Pill> :
