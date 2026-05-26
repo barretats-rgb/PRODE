@@ -46,11 +46,19 @@ service cloud.firestore {
         && request.resource.data.specialsPoints == 0;
       // El dueño edita SOLO campos de perfil; nunca sus agregados de puntaje.
       // El admin puede actualizar cualquier jugador (fan-out de puntos).
+      // El perfil público NO incluye PII (email/teléfono viven en playerPrivate).
       allow update: if isAdmin()
         || (isOwner(uid)
             && request.resource.data.diff(resource.data).affectedKeys()
-                 .hasOnly(['name','phone','photoURL','email','favoriteTeam',
+                 .hasOnly(['name','photoURL','favoriteTeam',
                            'avatarTone','avatar','mode','groupName','groupCode','updatedAt']));
+      allow delete: if false;
+    }
+
+    // ---- playerPrivate: PII (email/teléfono). Sólo el dueño y el admin la leen. ----
+    match /playerPrivate/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create, update: if isOwner(uid);
       allow delete: if false;
     }
 

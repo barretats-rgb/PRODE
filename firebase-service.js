@@ -47,27 +47,38 @@
   }
 
   // Crea el doc players/{uid} si no existe; siempre deja state.player actualizado.
+  // La PII (email/teléfono) NO va en players (que es de lectura pública para el ranking):
+  // va en playerPrivate/{uid}, que sólo leen el dueño y el admin.
   async function ensurePlayer(user) {
     const ref = collection("players").doc(user.uid);
     const snap = await ref.get();
+    let pub;
     if (snap.exists) {
-      state.player = { id: user.uid, ...snap.data() };
-      return state.player;
+      pub = { id: user.uid, ...snap.data() };
+    } else {
+      const fresh = {
+        name: user.displayName || "Jugador",
+        photoURL: user.photoURL || "",
+        favoriteTeam: "",
+        avatarTone: "citrus",
+        points: 0, exact: 0, winner: 0, played: 0, specialsPoints: 0,
+        createdAt: firestoreNow(),
+        updatedAt: firestoreNow(),
+      };
+      await ref.set(fresh, { merge: true });
+      await collection("playerPrivate").doc(user.uid).set(
+        { email: user.email || "", createdAt: firestoreNow(), updatedAt: firestoreNow() },
+        { merge: true });
+      // En memoria guardamos timestamps reales (ISO); el sentinel serverTimestamp() va sólo a Firestore.
+      const iso = localNow();
+      pub = { id: user.uid, ...fresh, createdAt: iso, updatedAt: iso };
     }
-    const fresh = {
-      name: user.displayName || "Jugador",
-      email: user.email || "",
-      photoURL: user.photoURL || "",
-      favoriteTeam: "",
-      avatarTone: "citrus",
-      points: 0, exact: 0, winner: 0, played: 0, specialsPoints: 0,
-      createdAt: firestoreNow(),
-      updatedAt: firestoreNow(),
-    };
-    await ref.set(fresh, { merge: true });
-    // En memoria guardamos timestamps reales (ISO); el sentinel serverTimestamp() va sólo a Firestore.
-    const iso = localNow();
-    state.player = { id: user.uid, ...fresh, createdAt: iso, updatedAt: iso };
+    // Datos privados propios (email/teléfono): sólo en memoria, para el perfil del dueño.
+    try {
+      const priv = await collection("playerPrivate").doc(user.uid).get();
+      if (priv.exists) pub = { ...pub, ...priv.data() };
+    } catch (e) { /* el dueño puede leer su propio doc; si falla, seguimos sin PII */ }
+    state.player = pub;
     return state.player;
   }
 
@@ -136,7 +147,15 @@
       notify();
       return { offline: true };
     }
-    await collection("players").doc(id).set({ ...patch, updatedAt: firestoreNow() }, { merge: true });
+    // La PII va al doc privado; el resto al público (lectura pública para el ranking).
+    const { phone, email, ...pub } = patch;
+    await collection("players").doc(id).set({ ...pub, updatedAt: firestoreNow() }, { merge: true });
+    if (phone !== undefined || email !== undefined) {
+      const priv = { updatedAt: firestoreNow() };
+      if (phone !== undefined) priv.phone = phone;
+      if (email !== undefined) priv.email = email;
+      await collection("playerPrivate").doc(id).set(priv, { merge: true });
+    }
     state.player = { ...(state.player || {}), ...patch, id, updatedAt: localNow() };
     notify();
     return { offline: false };
