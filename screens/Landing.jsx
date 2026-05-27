@@ -175,12 +175,27 @@ function Landing({ go }) {
           paddingLeft:4,
         }}>Premios de la casa</h3>
 
-        <div style={{display:"flex", flexDirection:"column", gap:10}}>
-          <PrizeRow rank="1°" prize="Una noche en Refugio Lodge" sub="Habitación oceanview · 2 personas" tone="citrus"/>
-          <PrizeRow rank="2°" prize="Cena para dos en Refugio" sub="Menú completo + vino"  tone="orange"/>
-          <PrizeRow rank="3°" prize="Open bar 1 noche" sub="Tragos de autor toda la noche" tone="sage"/>
-          <PrizeRow rank="Sem" prize="Mejor de la fecha" sub="Pizza + birra todos los lunes" tone="tan"/>
-          <PrizeRow rank="Exa" prize="Bonus por exacto" sub="Café + croissant Buena Nota" tone="cream"/>
+        <div style={{
+          padding:"18px 16px", borderRadius:18,
+          background:"var(--char-800)", border:"1px dashed var(--char-600)",
+          display:"flex", alignItems:"center", gap:14,
+        }}>
+          <div style={{
+            width:48, height:48, borderRadius:"50%",
+            background:"var(--char-900)", border:"1.5px solid var(--neon-citrus)",
+            display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0,
+          }}>
+            <i data-lucide="gift" style={{width:22,height:22,color:"var(--neon-citrus)"}}></i>
+          </div>
+          <div>
+            <div style={{
+              fontFamily:"var(--font-title)", fontSize:16, color:"var(--cream-100)",
+              textTransform:"uppercase", letterSpacing:"0.02em",
+            }}>A definir</div>
+            <div style={{fontSize:12, color:"var(--char-300)", marginTop:3, lineHeight:1.4}}>
+              Los premios del Refugio se anuncian pronto. Vos armá tu prode.
+            </div>
+          </div>
         </div>
       </div>
 
@@ -239,36 +254,6 @@ function PointCard({ pts, label, sub, tone }) {
         marginTop:8,
       }}>{label}</div>
       <div style={{fontSize:10, color:"var(--char-400)", marginTop:3}}>{sub}</div>
-    </div>
-  );
-}
-
-function PrizeRow({ rank, prize, sub, tone }) {
-  const colors = {
-    citrus:"var(--neon-citrus)", orange:"var(--orange-400)",
-    sage:"var(--sage-300)", tan:"var(--tan-300)", cream:"var(--cream-100)",
-  };
-  return (
-    <div style={{
-      display:"flex", alignItems:"center", gap:14,
-      padding:"12px 14px", borderRadius:18,
-      background:"var(--char-800)", border:"1px solid var(--char-700)",
-    }}>
-      <div style={{
-        width:48, height:48, borderRadius:"50%",
-        background:"var(--char-900)", border:`1.5px solid ${colors[tone]}`,
-        display:"flex", alignItems:"center", justifyContent:"center",
-        fontFamily:"var(--font-title)", fontSize:14, color:colors[tone],
-        letterSpacing:"0.02em",
-        flexShrink:0,
-      }}>{rank}</div>
-      <div style={{flex:1}}>
-        <div style={{
-          fontFamily:"var(--font-title)", fontSize:15, color:"var(--cream-100)",
-          textTransform:"uppercase", letterSpacing:"0.02em", lineHeight:1.1,
-        }}>{prize}</div>
-        <div style={{fontSize:11, color:"var(--char-400)", marginTop:3, letterSpacing:"0.04em"}}>{sub}</div>
-      </div>
     </div>
   );
 }
