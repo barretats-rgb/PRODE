@@ -374,7 +374,7 @@ function MatchRow({ match, prediction, onChange, locked }) {
 }
 
 /* ---------- NumStepper ---------- */
-function NumStepper({ value = 0, onChange, disabled }) {
+function NumStepper({ value, onChange, disabled }) {
   return (
     <div style={{
       display:"flex", flexDirection:"column", alignItems:"center", gap:2,
@@ -395,7 +395,7 @@ function NumStepper({ value = 0, onChange, disabled }) {
         display:"flex", alignItems:"center", justifyContent:"center",
         fontFamily:"var(--font-title)", fontSize:18,
         color: disabled ? "var(--char-400)" : "var(--cream-100)",
-      }}>{value ?? 0}</div>
+      }}>{value ?? "X"}</div>
       <button disabled={disabled} onClick={()=>onChange?.(Math.max(0,(value||0)-1))} style={{
         width:24, height:18, border:0, borderRadius:6,
         background:"var(--char-700)", color:"var(--cream-100)",
