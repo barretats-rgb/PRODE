@@ -276,6 +276,29 @@
     return { matched: perPrediction.length };
   }
 
+  // Expulsa a un jugador: borra sus predicciones (batch) y sus docs.
+  // Requiere ser admin (las reglas lo exigen). No reabre ni recalcula nada de otros
+  // jugadores: cada uno tiene sus propios agregados.
+  async function expelPlayer(uid) {
+    if (!state.ready) throw new Error("Firebase no está listo.");
+    if (!uid) return { ok: false };
+    // 1) borrar todas las predicciones del jugador (en lotes ≤450)
+    const snap = await collection("predictions").where("playerId", "==", uid).get();
+    let batch = state.db.batch();
+    let writes = 0;
+    const flush = async () => { if (writes > 0) { await batch.commit(); batch = state.db.batch(); writes = 0; } };
+    for (const doc of snap.docs) {
+      batch.delete(doc.ref);
+      if (++writes >= 450) await flush();
+    }
+    await flush();
+    // 2) borrar los docs del jugador (delete de doc inexistente no falla)
+    await collection("players").doc(uid).delete();
+    await collection("playerPrivate").doc(uid).delete();
+    await collection("specialPredictions").doc(uid).delete();
+    return { ok: true };
+  }
+
   window.ProdeDB = {
     init,
     onAuthChange,
@@ -296,5 +319,6 @@
     subscribeRanking,
     subscribePlayerCount,
     finalizeMatch,
+    expelPlayer,
   };
 })();
