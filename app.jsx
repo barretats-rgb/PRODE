@@ -168,6 +168,30 @@ function DesktopAdmin() {
     setMatches(ms => ms.map(m => m.id === id ? { ...m, [side]: value } : m));
   };
 
+  // Gestión de jugadores (mismo modelo que la vista compacta): ranking en vivo + expulsar.
+  const [tab, setTab] = useState("resultados");
+  const [players, setPlayers] = useState([]);
+  const [confirmExpel, setConfirmExpel] = useState(null);
+  const [expelling, setExpelling] = useState(null);
+
+  useEffect(() => {
+    const unsub = window.ProdeDB?.subscribeRanking?.((list) => setPlayers(list));
+    return () => unsub && unsub();
+  }, []);
+
+  const myUid = window.ProdeDB?.getUser?.()?.uid;
+  const doExpel = async (uid) => {
+    setExpelling(uid);
+    try {
+      await window.ProdeDB?.expelPlayer?.(uid);
+    } catch (e) {
+      console.error("[Prode Refugio] expulsar jugador", e);
+    } finally {
+      setExpelling(null);
+      setConfirmExpel(null);
+    }
+  };
+
   // Desktop admin keeps the same data model as mobile, but gives the staff a wider table for faster edits.
   return (
     <div style={{
@@ -189,15 +213,25 @@ function DesktopAdmin() {
           fontSize:9, letterSpacing:"0.22em", textTransform:"uppercase",
           color:"var(--char-400)", fontWeight:700, padding:"4px 8px",
         }}>Panel</div>
-        <div style={{
-          display:"flex", alignItems:"center", gap:10,
-          padding:"9px 12px", borderRadius:10, textAlign:"left",
-          background:"var(--char-700)", border:"1px solid var(--neon-citrus)",
-          color:"var(--cream-100)", fontSize:12, fontWeight:600, fontFamily:"var(--font-body)",
-        }}>
-          <i data-lucide="check-check" style={{width:14,height:14}}></i>
-          Resultados
-        </div>
+        {[
+          {id:"resultados", label:"Resultados", icon:"check-check"},
+          {id:"jugadores",  label:"Jugadores",  icon:"users"},
+        ].map(t => {
+          const on = tab === t.id;
+          return (
+            <button key={t.id} onClick={()=>setTab(t.id)} style={{
+              display:"flex", alignItems:"center", gap:10,
+              padding:"9px 12px", borderRadius:10, textAlign:"left", cursor:"pointer",
+              background: on ? "var(--char-700)" : "transparent",
+              border: on ? "1px solid var(--neon-citrus)" : "1px solid transparent",
+              color: on ? "var(--cream-100)" : "var(--char-300)",
+              fontSize:12, fontWeight:600, fontFamily:"var(--font-body)",
+            }}>
+              <i data-lucide={t.icon} style={{width:14,height:14}}></i>
+              {t.label}
+            </button>
+          );
+        })}
         <div style={{flex:1}}/>
         <div style={{
           padding:"10px 12px", borderRadius:10, background:"var(--char-900)",
@@ -213,6 +247,7 @@ function DesktopAdmin() {
       </aside>
 
       <main style={{padding:"22px 28px", overflow:"auto"}}>
+        {tab === "resultados" && (<>
         <div style={{marginBottom:18}}>
           <Eyebrow color="var(--neon-citrus)">Panel · Tamarindo</Eyebrow>
           <h1 style={{
@@ -287,6 +322,62 @@ function DesktopAdmin() {
             </div>
           )})}
         </div>
+        </>)}
+
+        {tab === "jugadores" && (
+          <div>
+            <div style={{marginBottom:18}}>
+              <Eyebrow color="var(--neon-citrus)">Panel · Tamarindo</Eyebrow>
+              <h1 style={{
+                fontFamily:"var(--font-title)", fontSize:36, color:"var(--cream-100)",
+                textTransform:"uppercase", letterSpacing:"0.02em", margin:"4px 0 0",
+              }}>Jugadores · {players.length}</h1>
+              <div style={{fontSize:12, color:"var(--char-400)", marginTop:8}}>
+                Expulsar borra al jugador y todas sus predicciones. No se puede deshacer.
+              </div>
+            </div>
+            {players.length === 0 && (
+              <div style={{padding:16, color:"var(--char-300)", fontSize:13,
+                borderRadius:14, background:"var(--char-800)", border:"1px solid var(--char-700)"}}>
+                Todavía no hay jugadores registrados.
+              </div>
+            )}
+            <div style={{
+              borderRadius:14, overflow:"hidden", background:"var(--char-800)",
+              border:"1px solid var(--char-700)",
+            }}>
+              {(window.ProdeRanking?.rankingRowsFromPlayers?.(players, myUid) || []).map((r, i, arr) => (
+                <div key={r.id} style={{
+                  padding:"12px 16px", borderBottom: i < arr.length - 1 ? "1px solid var(--char-700)" : 0,
+                  display:"flex", alignItems:"center", gap:14,
+                }}>
+                  <span style={{width:24, fontFamily:"var(--font-title)", fontSize:13, color:"var(--char-400)"}}>{r.rank}</span>
+                  <Avatar initials={r.avatar} size={32} tone={r.you ? "citrus" : "olive"}/>
+                  <div style={{flex:1, minWidth:0, display:"flex", alignItems:"center", gap:8}}>
+                    <span style={{color:"var(--cream-100)", fontWeight:600, fontSize:13,
+                      whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis"}}>{r.name}</span>
+                    {r.nat ? <Flag code={r.nat} size={14}/> : null}
+                  </div>
+                  <span style={{fontSize:12, color:"var(--char-300)", fontFamily:"var(--font-mono)", minWidth:60, textAlign:"right"}}>{r.pts} pts</span>
+                  <div style={{width:170, textAlign:"right"}}>
+                    {r.you ? (
+                      <Pill tone="ghost">Vos</Pill>
+                    ) : confirmExpel === r.id ? (
+                      <div style={{display:"inline-flex", gap:6}}>
+                        <Btn size="sm" variant="primary" onClick={()=>doExpel(r.id)}>
+                          {expelling === r.id ? "..." : "Sí, expulsar"}
+                        </Btn>
+                        <Btn size="sm" variant="ghost" onClick={()=>setConfirmExpel(null)}>No</Btn>
+                      </div>
+                    ) : (
+                      <Btn size="sm" variant="ghost" onClick={()=>setConfirmExpel(r.id)}>Expulsar</Btn>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
       </main>
     </div>
