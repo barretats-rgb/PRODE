@@ -52,14 +52,14 @@ service cloud.firestore {
             && request.resource.data.diff(resource.data).affectedKeys()
                  .hasOnly(['name','photoURL','favoriteTeam',
                            'avatarTone','avatar','mode','groupName','groupCode','updatedAt']));
-      allow delete: if false;
+      allow delete: if isAdmin();
     }
 
     // ---- playerPrivate: PII (email/teléfono). Sólo el dueño y el admin la leen. ----
     match /playerPrivate/{uid} {
       allow read: if isOwner(uid) || isAdmin();
       allow create, update: if isOwner(uid);
-      allow delete: if false;
+      allow delete: if isAdmin();
     }
 
     // ---- predictions: doc id = `${uid}_${matchId}` ----
@@ -74,7 +74,7 @@ service cloud.firestore {
             && request.resource.data.playerId == request.auth.uid
             && predId == request.auth.uid + '_' + request.resource.data.matchId
             && request.resource.data.points == null);
-      allow delete: if false;
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.playerId == request.auth.uid);
     }
 
     // ---- matches: resultados oficiales (sin datos personales) ----
@@ -87,7 +87,7 @@ service cloud.firestore {
     match /specialPredictions/{uid} {
       allow read: if isSignedIn();
       allow create, update: if isOwner(uid) || isAdmin();
-      allow delete: if false;
+      allow delete: if isAdmin() || isOwner(uid);
     }
 
     // ---- meta: config y respuestas oficiales de especiales ----
