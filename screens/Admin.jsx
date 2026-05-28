@@ -38,6 +38,28 @@ function Admin({ go }) {
     }
   };
 
+  const [players, setPlayers] = useState([]);
+  const [confirmExpel, setConfirmExpel] = useState(null); // uid con confirmación pendiente
+  const [expelling, setExpelling] = useState(null);
+
+  useEffect(() => {
+    const unsub = window.ProdeDB?.subscribeRanking?.((list) => setPlayers(list));
+    return () => unsub && unsub();
+  }, []);
+
+  const myUid = window.ProdeDB?.getUser?.()?.uid;
+  const doExpel = async (uid) => {
+    setExpelling(uid);
+    try {
+      await window.ProdeDB?.expelPlayer?.(uid);
+    } catch (e) {
+      console.error("[Prode Refugio] expulsar jugador", e);
+    } finally {
+      setExpelling(null);
+      setConfirmExpel(null);
+    }
+  };
+
   return (
     <div style={{paddingBottom:20}}>
       <AppBar back onBack={()=>go("home")} title="Panel Refugio" subtitle="Admin · Tamarindo"
@@ -52,6 +74,7 @@ function Admin({ go }) {
         {[
           {id:"resultados",label:"Resultados", icon:"check-check"},
           {id:"partidos",  label:"Partidos", icon:"goal"},
+          {id:"jugadores", label:"Jugadores", icon:"users"},
         ].map(t => {
           const on = tab === t.id;
           return (
@@ -190,6 +213,56 @@ function Admin({ go }) {
                 </Btn>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {tab === "jugadores" && (
+        <div style={{padding:"22px 16px 0"}}>
+          <Eyebrow color="var(--neon-citrus)">Jugadores · {players.length}</Eyebrow>
+          <h3 style={{
+            fontFamily:"var(--font-title)", fontSize:20, color:"var(--cream-100)",
+            textTransform:"uppercase", letterSpacing:"0.02em", margin:"4px 0 12px",
+          }}>Administrar</h3>
+          {players.length === 0 && (
+            <div style={{padding:14, color:"var(--char-300)", fontSize:12,
+              borderRadius:14, background:"var(--char-800)", border:"1px solid var(--char-700)"}}>
+              Todavía no hay jugadores registrados.
+            </div>
+          )}
+          <div style={{display:"flex", flexDirection:"column", gap:8}}>
+            {(window.ProdeRanking?.rankingRowsFromPlayers?.(players, myUid) || []).map((r) => (
+              <div key={r.id} style={{
+                display:"flex", alignItems:"center", gap:11,
+                padding:"10px 13px", borderRadius:16,
+                background:"var(--char-800)", border:"1px solid var(--char-700)",
+              }}>
+                <Avatar initials={r.avatar} size={30} tone={r.you ? "citrus" : "olive"}/>
+                <div style={{flex:1, minWidth:0}}>
+                  <div style={{fontFamily:"var(--font-body)", fontSize:13, color:"var(--cream-100)", fontWeight:600,
+                    whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis"}}>{r.name}</div>
+                  <div style={{display:"flex", alignItems:"center", gap:6, marginTop:2}}>
+                    {r.nat ? <Flag code={r.nat} size={11}/> : null}
+                    <span style={{fontSize:10, color:"var(--char-400)", letterSpacing:"0.04em"}}>{r.pts} pts</span>
+                  </div>
+                </div>
+                {r.you ? (
+                  <Pill tone="ghost">Vos</Pill>
+                ) : confirmExpel === r.id ? (
+                  <div style={{display:"flex", gap:6}}>
+                    <Btn size="sm" variant="primary" onClick={()=>doExpel(r.id)}>
+                      {expelling === r.id ? "..." : "Sí, expulsar"}
+                    </Btn>
+                    <Btn size="sm" variant="ghost" onClick={()=>setConfirmExpel(null)}>No</Btn>
+                  </div>
+                ) : (
+                  <Btn size="sm" variant="ghost" onClick={()=>setConfirmExpel(r.id)}>Expulsar</Btn>
+                )}
+              </div>
+            ))}
+          </div>
+          <div style={{marginTop:12, fontSize:10, color:"var(--char-500)", letterSpacing:"0.04em", lineHeight:1.5}}>
+            Expulsar borra al jugador y todas sus predicciones. No se puede deshacer.
           </div>
         </div>
       )}
