@@ -5,6 +5,7 @@
 function Specials({ go }) {
   const [sp, setSp] = useState(window.ProdeStore?.getSpecials?.() || {});
   const [official, setOfficial] = useState({});
+  const [toast, setToast] = useState(null);
   // Cerradas desde el kickoff del primer partido (11 jun 18:00 CR).
   const locked = window.ProdeSpecials?.specialsLocked?.() ?? false;
 
@@ -20,9 +21,19 @@ function Specials({ go }) {
     return () => unsub && unsub();
   }, []);
 
-  const saveAndClose = async () => {
+  // Cada pick se guarda solo (como en Predicciones): tocás → guarda → toast.
+  // Se manda el delta { [key]: value } para que gane sobre el read-back previo.
+  const pick = (key, value) => {
     if (locked) return;
-    await window.ProdeStore?.saveSpecials(sp);
+    setSp((s) => ({ ...s, [key]: value }));
+    setToast("Guardado");
+    Promise.resolve(window.ProdeStore?.saveSpecials({ [key]: value }))
+      .catch((e) => { console.warn("[Prode Refugio] No se pudo guardar el especial.", e); setToast("Guardado local"); });
+    setTimeout(() => setToast(null), 1400);
+  };
+
+  const saveAndClose = async () => {
+    if (!locked) await window.ProdeStore?.saveSpecials(sp); // guardado final defensivo
     go("matches");
   };
 
@@ -41,7 +52,7 @@ function Specials({ go }) {
         {opts.map(c => {
           const on = sp[key] === c;
           return (
-            <button key={c} disabled={locked} onClick={()=>{ if (!locked) setSp(s=>({...s, [key]:c})); }} style={{
+            <button key={c} disabled={locked} onClick={()=>pick(key, c)} style={{
               flexShrink:0, padding:8, borderRadius:14, cursor: locked ? "not-allowed" : "pointer",
               opacity: locked && !on ? 0.45 : 1,
               background: on ? "var(--char-700)" : "var(--char-900)",
@@ -88,11 +99,11 @@ function Specials({ go }) {
         </SpecialRow>
 
         <SpecialRow icon="target" tone="orange" label="Goleador del torneo" sub="Bota de oro" current={sp.goleador} result={resultFor("goleador")}>
-          <ScorerPick disabled={locked} value={sp.goleador} onChange={v=>setSp(s=>({...s, goleador:v}))}/>
+          <ScorerPick disabled={locked} value={sp.goleador} onChange={v=>pick("goleador", v)}/>
         </SpecialRow>
 
         <SpecialRow icon="shield" tone="sage" label="Mejor arquero" sub="Guante de oro" current={sp.arquero} result={resultFor("arquero")}>
-          <ScorerPick disabled={locked} value={sp.arquero} onChange={v=>setSp(s=>({...s, arquero:v}))} options={[
+          <ScorerPick disabled={locked} value={sp.arquero} onChange={v=>pick("arquero", v)} options={[
             "Emiliano Martínez", "Thibaut Courtois", "Mike Maignan", "Unai Simón", "Alisson", "Yann Sommer"
           ]}/>
         </SpecialRow>
@@ -124,10 +135,30 @@ function Specials({ go }) {
       </div>
 
       <div style={{padding:"18px 16px 0"}}>
-        <Btn full variant={locked ? "dark" : "accent"} size="lg" icon="lock" onClick={saveAndClose}>
-          {locked ? "Especiales cerradas" : "Bloquear especiales"}
+        <Btn full variant={locked ? "dark" : "accent"} size="lg" icon={locked ? "lock" : "check"} onClick={saveAndClose}>
+          {locked ? "Especiales cerradas" : "Listo"}
         </Btn>
+        {!locked && (
+          <div style={{textAlign:"center", marginTop:10, fontSize:11, color:"var(--char-400)", letterSpacing:"0.04em"}}>
+            Cada elección se guarda sola. Podés cambiarla hasta el 11 de junio.
+          </div>
+        )}
       </div>
+
+      {toast && (
+        <div style={{
+          position:"fixed", bottom:80, left:"50%", transform:"translateX(-50%)",
+          background:"var(--neon-citrus)", color:"var(--char-900)",
+          padding:"10px 18px", borderRadius:999,
+          fontFamily:"var(--font-body)", fontWeight:700,
+          fontSize:11, letterSpacing:"0.22em", textTransform:"uppercase",
+          boxShadow:"0 12px 30px -8px rgba(0,0,0,0.5)",
+          zIndex:50, display:"flex", alignItems:"center", gap:8,
+        }}>
+          <i data-lucide="check" style={{width:13,height:13,strokeWidth:3}}></i>
+          {toast}
+        </div>
+      )}
     </div>
   );
 }
