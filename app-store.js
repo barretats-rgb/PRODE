@@ -276,9 +276,10 @@
   }
 
   function getSpecials() {
+    // Sin demo: local primero, y los picks reales de Firestore (read-back) pisan lo local.
     return {
-      ...(window.MY_SPECIALS || {}),
       ...readJson(SPECIALS_KEY, {}),
+      ...(window.ProdeDB?.getMySpecials?.() || {}),
     };
   }
 

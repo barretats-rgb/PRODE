@@ -13,7 +13,7 @@
     window.FIREBASE_CONFIG.projectId &&
     window.FIREBASE_CONFIG.projectId !== placeholderProject;
 
-  const state = { ready: false, user: null, player: null, db: null, auth: null, matchResults: {}, myPredictions: {}, myPredsUnsub: null };
+  const state = { ready: false, user: null, player: null, db: null, auth: null, matchResults: {}, myPredictions: {}, mySpecials: {}, myPredsUnsub: null };
   const listeners = new Set();
 
   function firestoreNow() {
@@ -123,10 +123,20 @@
             state.myPredictions = next;
             window.dispatchEvent(new CustomEvent("prode:data", { detail: { key: "myPredictions" } }));
           }, (e) => console.error("[Prode Refugio] mis predicciones snapshot", e));
+        // Read-back: mis especiales (one-shot; cambian poco y se cierran el 11 jun).
+        try {
+          const sp = await collection("specialPredictions").doc(user.uid).get();
+          state.mySpecials = sp.exists ? sp.data() : {};
+        } catch (e) {
+          console.warn("[Prode Refugio] read-back especiales", e);
+          state.mySpecials = {};
+        }
+        window.dispatchEvent(new CustomEvent("prode:data", { detail: { key: "mySpecials" } }));
       } else {
         state.user = null;
         state.player = null;
         state.myPredictions = {};
+        state.mySpecials = {};
       }
       notify();
     });
@@ -199,6 +209,7 @@
     localStorage.setItem("prode_refugio_specials", JSON.stringify(payload));
     if (!state.ready || !playerId) return { offline: true };
     await collection("specialPredictions").doc(playerId).set(payload, { merge: true });
+    state.mySpecials = { ...state.mySpecials, ...specials };
     return { offline: false };
   }
 
@@ -326,6 +337,7 @@
     saveMatchResult,
     getMatchResults,
     getMyPredictions,
+    getMySpecials: () => state.mySpecials,
     subscribeRanking,
     subscribePlayerCount,
     finalizeMatch,
