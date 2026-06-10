@@ -68,8 +68,8 @@ function Landing({ go }) {
             margin:"14px 0 0", maxWidth:300,
             color:"var(--char-200)", fontSize:14, lineHeight:1.5,
           }}>
-            Armá tu prode, competí con la barra y ganá tragos, cenas
-            y una noche en Refugio Lodge durante todo el Mundial.
+            Armá tu prode, competí con la barra y ganá consumiciones,
+            camiseta del Refugio y una burger o desayuno cada semana.
           </p>
 
           <div style={{display:"flex", gap:8, marginTop:22, flexWrap:"wrap"}}>
