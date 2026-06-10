@@ -409,6 +409,81 @@ function NumStepper({ value, onChange, disabled }) {
   );
 }
 
+/* ---------- PrizesBlock (premios del torneo + semanal) ---------- */
+function PrizesBlock({ heading = true }) {
+  const P = window.PRIZES;
+  if (!P) return null;
+  const toneColor = {
+    citrus: "var(--neon-citrus)", orange: "var(--orange-400)", char: "var(--char-200)",
+  };
+  return (
+    <div>
+      {heading && (
+        <>
+          <Eyebrow color="var(--neon-citrus)" style={{paddingLeft:4}}>Lo que se gana</Eyebrow>
+          <h3 style={{
+            fontFamily:"var(--font-title)", fontSize:26, color:"var(--cream-100)",
+            textTransform:"uppercase", letterSpacing:"0.02em", margin:"4px 0 14px", paddingLeft:4,
+          }}>Premios de la casa</h3>
+        </>
+      )}
+
+      {/* Podio del ranking */}
+      <div style={{display:"flex", flexDirection:"column", gap:10}}>
+        {P.podium.map(p => (
+          <div key={p.rank} style={{
+            display:"flex", alignItems:"center", gap:14,
+            padding:"14px 16px", borderRadius:18,
+            background:"var(--char-800)",
+            border:`1px solid ${p.rank === 1 ? "var(--neon-citrus)" : "var(--char-700)"}`,
+          }}>
+            <div style={{
+              width:46, height:46, borderRadius:"50%", flexShrink:0,
+              background:"var(--char-900)", border:`1.5px solid ${toneColor[p.tone]}`,
+              display:"flex", alignItems:"center", justifyContent:"center",
+              fontFamily:"var(--font-title)", fontSize:18, color:toneColor[p.tone],
+            }}>{p.rank}°</div>
+            <div style={{flex:1, minWidth:0}}>
+              <Eyebrow color={toneColor[p.tone]} style={{fontSize:9}}>{p.eyebrow}</Eyebrow>
+              <div style={{
+                fontFamily:"var(--font-body)", fontSize:13, color:"var(--cream-100)",
+                fontWeight:600, marginTop:3, lineHeight:1.35,
+              }}>{p.reward}</div>
+            </div>
+            <i data-lucide={p.icon} style={{width:20, height:20, color:toneColor[p.tone], flexShrink:0}}></i>
+          </div>
+        ))}
+      </div>
+
+      {/* Premio semanal rotativo */}
+      <div style={{
+        marginTop:10, padding:16, borderRadius:18,
+        background:"linear-gradient(135deg, var(--orange-700), var(--char-800))",
+        border:"1px solid var(--orange-500)",
+        display:"flex", alignItems:"center", gap:14,
+      }}>
+        <div style={{
+          width:46, height:46, borderRadius:"50%", flexShrink:0,
+          background:"var(--char-900)", border:"1.5px solid var(--neon-citrus)",
+          display:"flex", alignItems:"center", justifyContent:"center",
+        }}>
+          <i data-lucide="utensils" style={{width:22, height:22, color:"var(--neon-citrus)"}}></i>
+        </div>
+        <div style={{flex:1, minWidth:0}}>
+          <Eyebrow color="var(--neon-citrus)">{P.weekly.title} · rota cada semana</Eyebrow>
+          <div style={{
+            fontFamily:"var(--font-title)", fontSize:16, color:"var(--cream-100)",
+            textTransform:"uppercase", letterSpacing:"0.02em", marginTop:3,
+          }}>{P.weekly.reward}</div>
+          <div style={{fontSize:11, color:"var(--char-200)", marginTop:4, lineHeight:1.4}}>
+            {P.weekly.sub}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ---------- Card (generic) ---------- */
 function Card({ children, style, dark = true, glow = false, padding = 16 }) {
   return (
@@ -424,5 +499,5 @@ function Card({ children, style, dark = true, glow = false, padding = 16 }) {
 
 Object.assign(window, {
   Flag, Eyebrow, Pill, Btn, AppBar, TabBar, Avatar, BadgeChip,
-  Countdown, MatchRow, NumStepper, Card,
+  Countdown, MatchRow, NumStepper, Card, PrizesBlock,
 });

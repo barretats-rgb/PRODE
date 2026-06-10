@@ -228,6 +228,20 @@ window.BADGES = {
   rey:       { label:"Rey del Refugio", sub:"Top 3 de la semana",      emoji:"♛", color:"var(--orange-400)" },
 };
 
+// Premios — del torneo (posiciones del ranking) + premio semanal rotativo.
+window.PRIZES = {
+  podium: [
+    { rank:1, reward:"USD 100 en consumiciones + camiseta del Refugio", eyebrow:"Campeón del prode", icon:"trophy", tone:"citrus" },
+    { rank:2, reward:"USD 50 en consumiciones + camiseta del Refugio",  eyebrow:"Segundo puesto",    icon:"medal",  tone:"char"   },
+    { rank:3, reward:"Camiseta del Refugio + un café",                  eyebrow:"Tercer puesto",     icon:"award",  tone:"orange" },
+  ],
+  weekly: {
+    title:  "Premio semanal",
+    reward: "Una burger o un desayuno",
+    sub:    "Cada semana, el que más puntos hace esa semana se lo lleva. El premio rota: a veces burger, a veces desayuno.",
+  },
+};
+
 // Grupos privados
 window.GROUPS = [
   { id:"g1", name:"La Mesa del Imperial", code:"IMP-784", members:14, you:5, position:2,

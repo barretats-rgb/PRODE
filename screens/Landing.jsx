@@ -168,35 +168,7 @@ function Landing({ go }) {
 
       {/* PREMIOS */}
       <div style={{padding:"22px 16px 0"}}>
-        <Eyebrow color="var(--neon-citrus)" style={{paddingLeft:4}}>Lo que se gana</Eyebrow>
-        <h3 style={{
-          fontFamily:"var(--font-title)", fontSize:26, color:"var(--cream-100)",
-          textTransform:"uppercase", letterSpacing:"0.02em", margin:"4px 0 14px",
-          paddingLeft:4,
-        }}>Premios de la casa</h3>
-
-        <div style={{
-          padding:"18px 16px", borderRadius:18,
-          background:"var(--char-800)", border:"1px dashed var(--char-600)",
-          display:"flex", alignItems:"center", gap:14,
-        }}>
-          <div style={{
-            width:48, height:48, borderRadius:"50%",
-            background:"var(--char-900)", border:"1.5px solid var(--neon-citrus)",
-            display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0,
-          }}>
-            <i data-lucide="gift" style={{width:22,height:22,color:"var(--neon-citrus)"}}></i>
-          </div>
-          <div>
-            <div style={{
-              fontFamily:"var(--font-title)", fontSize:16, color:"var(--cream-100)",
-              textTransform:"uppercase", letterSpacing:"0.02em",
-            }}>A definir</div>
-            <div style={{fontSize:12, color:"var(--char-300)", marginTop:3, lineHeight:1.4}}>
-              Los premios del Refugio se anuncian pronto. Vos armá tu prode.
-            </div>
-          </div>
-        </div>
+        <PrizesBlock/>
       </div>
 
       {/* Frase con foto */}

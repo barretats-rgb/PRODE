@@ -135,6 +135,11 @@ function Ranking({ go }) {
         </div>
       )}
 
+      {/* premios en juego */}
+      <div style={{padding:"22px 16px 0"}}>
+        <PrizesBlock/>
+      </div>
+
       {/* badges legend */}
       <div style={{padding:"22px 16px 0"}}>
         <Eyebrow color="var(--neon-citrus)" style={{paddingLeft:4}}>Medallas en juego</Eyebrow>
