@@ -320,6 +320,46 @@
     return { ok: true };
   }
 
+  // Respuestas oficiales de especiales en vivo (meta/specialResults). Devuelve unsub.
+  function subscribeSpecialResults(cb) {
+    if (!state.ready) { cb({}); return () => {}; }
+    return collection("meta").doc("specialResults").onSnapshot(
+      (snap) => cb(snap.exists ? snap.data() : {}),
+      (e) => console.error("[Prode Refugio] specialResults snapshot", e));
+  }
+
+  // El admin confirma la respuesta oficial de UN especial y reparte +5 a los
+  // acertantes. Recalcula TODAS las respuestas confirmadas hasta ahora (idempotente
+  // vía `awarded`), así corregir un valor mueve los puntos sin duplicar.
+  async function confirmSpecialResult(key, value) {
+    if (!state.ready) throw new Error("Firebase no está listo.");
+    const ref = collection("meta").doc("specialResults");
+    await ref.set({ [key]: value, updatedAt: firestoreNow() }, { merge: true });
+    const metaSnap = await ref.get();
+    const { updatedAt, ...official } = metaSnap.data() || {};
+    const snap = await collection("specialPredictions").get();
+    // El doc id ES el uid (ver saveSpecials): autoritativo por sobre el campo playerId.
+    const preds = snap.docs.map((doc) => ({ ...doc.data(), playerId: doc.id }));
+    const { perPrediction, perPlayer } = window.ProdeSpecials.scoreSpecialsFanout(official, preds);
+    const inc = window.firebase.firestore.FieldValue.increment;
+    let batch = state.db.batch();
+    let writes = 0;
+    const flush = async () => { if (writes > 0) { await batch.commit(); batch = state.db.batch(); writes = 0; } };
+    for (const pp of perPrediction) {
+      batch.set(collection("specialPredictions").doc(pp.playerId), { awarded: pp.awarded }, { merge: true });
+      if (++writes >= 450) await flush();
+    }
+    for (const [playerId, d] of Object.entries(perPlayer)) {
+      // Los especiales suman al total del ranking; NO tocan los buckets semanales.
+      batch.set(collection("players").doc(playerId), {
+        specialsPoints: inc(d.specialsPoints), points: inc(d.specialsPoints),
+      }, { merge: true });
+      if (++writes >= 450) await flush();
+    }
+    await flush();
+    return { evaluated: perPrediction.length };
+  }
+
   window.ProdeDB = {
     init,
     onAuthChange,
@@ -342,5 +382,7 @@
     subscribePlayerCount,
     finalizeMatch,
     expelPlayer,
+    subscribeSpecialResults,
+    confirmSpecialResult,
   };
 })();
