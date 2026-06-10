@@ -276,18 +276,21 @@
   }
 
   function getSpecials() {
+    // Sin demo: local primero, y los picks reales de Firestore (read-back) pisan lo local.
     return {
-      ...(window.MY_SPECIALS || {}),
       ...readJson(SPECIALS_KEY, {}),
+      ...(window.ProdeDB?.getMySpecials?.() || {}),
     };
   }
 
   async function saveSpecials(specials) {
-    const payload = {
-      ...getSpecials(),
-      ...specials,
-      updatedAt: new Date().toISOString(),
-    };
+    // Sólo los picks: el read-back trae awarded/playerId/updatedAt y las reglas
+    // rechazan cualquier escritura del dueño que toque `awarded`. Se filtra acá.
+    const keys = window.ProdeSpecials?.SPECIAL_KEYS
+      || ["campeon", "subcampeon", "goleador", "arquero", "sorpresa", "decepcion"];
+    const merged = { ...getSpecials(), ...specials };
+    const payload = { updatedAt: new Date().toISOString() };
+    for (const k of keys) if (merged[k] !== undefined) payload[k] = merged[k];
     writeJson(SPECIALS_KEY, payload);
     try {
       await window.ProdeDB?.saveSpecials(payload);

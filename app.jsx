@@ -215,6 +215,7 @@ function DesktopAdmin() {
         }}>Panel</div>
         {[
           {id:"resultados", label:"Resultados", icon:"check-check"},
+          {id:"especiales", label:"Especiales", icon:"star"},
           {id:"jugadores",  label:"Jugadores",  icon:"users"},
         ].map(t => {
           const on = tab === t.id;
@@ -376,6 +377,19 @@ function DesktopAdmin() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {tab === "especiales" && (
+          <div style={{maxWidth:640}}>
+            <div style={{marginBottom:18}}>
+              <Eyebrow color="var(--neon-citrus)">Panel · Tamarindo</Eyebrow>
+              <h1 style={{
+                fontFamily:"var(--font-title)", fontSize:36, color:"var(--cream-100)",
+                textTransform:"uppercase", letterSpacing:"0.02em", margin:"4px 0 0",
+              }}>Especiales · respuestas oficiales</h1>
+            </div>
+            {window.AdminSpecials ? <AdminSpecials/> : null}
           </div>
         )}
 

@@ -14,8 +14,13 @@ function Ranking({ go }) {
 
   const myUid = window.ProdeDB?.getUser?.()?.uid;
   const loading = players === null;            // null = aún no llegó el primer snapshot
+  // Rey del Refugio: ganó alguna semana cerrada (datos del ganador semanal).
+  const reyIds = (players && window.ProdeWeekly)
+    ? window.ProdeWeekly.weeklyHistory(players, window.ProdeWeekly.currentWeekId())
+        .flatMap((h) => h.leaders.map((l) => l.id))
+    : [];
   const rows = (players && window.ProdeRanking)
-    ? window.ProdeRanking.rankingRowsFromPlayers(players, myUid)
+    ? window.ProdeRanking.rankingRowsFromPlayers(players, myUid, reyIds)
     : [];                                       // sin datos reales: vacío (nada de demo)
   const you = rows.find(r => r.you);
   const podium = rows.slice(0, 3);
@@ -279,7 +284,7 @@ function RankRow({ r, expanded, onClick }) {
           padding:"4px 12px 12px", borderTop:"1px dashed var(--char-700)",
           display:"flex", alignItems:"center", gap:8, flexWrap:"wrap",
         }}>
-          <BadgeChip kind={r.badge}/>
+          {(r.badges || [r.badge]).map((k) => <BadgeChip key={k} kind={k}/>)}
           <div style={{
             fontSize:10, color:"var(--char-400)", marginLeft:"auto", letterSpacing:"0.04em",
           }}>Racha: <span style={{color:"var(--cream-100)"}}>{r.streak} aciertos</span></div>

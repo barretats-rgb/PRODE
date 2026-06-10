@@ -72,9 +72,10 @@ function Admin({ go }) {
         padding:"4px 16px 4px", display:"flex", gap:5, overflowX:"auto", scrollbarWidth:"none",
       }}>
         {[
-          {id:"resultados",label:"Resultados", icon:"check-check"},
-          {id:"partidos",  label:"Partidos", icon:"goal"},
-          {id:"jugadores", label:"Jugadores", icon:"users"},
+          {id:"resultados", label:"Resultados", icon:"check-check"},
+          {id:"especiales", label:"Especiales", icon:"star"},
+          {id:"partidos",   label:"Partidos", icon:"goal"},
+          {id:"jugadores",  label:"Jugadores", icon:"users"},
         ].map(t => {
           const on = tab === t.id;
           return (
@@ -217,6 +218,17 @@ function Admin({ go }) {
         </div>
       )}
 
+      {tab === "especiales" && (
+        <div style={{padding:"22px 16px 0"}}>
+          <Eyebrow color="var(--neon-citrus)">Respuestas oficiales</Eyebrow>
+          <h3 style={{
+            fontFamily:"var(--font-title)", fontSize:20, color:"var(--cream-100)",
+            textTransform:"uppercase", letterSpacing:"0.02em", margin:"4px 0 12px",
+          }}>Especiales</h3>
+          <AdminSpecials/>
+        </div>
+      )}
+
       {tab === "jugadores" && (
         <div style={{padding:"22px 16px 0"}}>
           <Eyebrow color="var(--neon-citrus)">Jugadores · {players.length}</Eyebrow>
@@ -296,5 +308,133 @@ function ToggleSwitch({ on:initOn }) {
     </button>
   );
 }
+
+/* ---------- AdminSpecials: respuestas oficiales de los especiales ----------
+   Compartido entre el Admin mobile y el DesktopAdmin (app.jsx). Confirmar
+   reparte +5 a cada acertante (idempotente; corregir y re-confirmar recalcula). */
+const SPECIAL_TEAM_OPTS = ["ARG","BRA","FRA","ESP","ENG","POR","GER","NED","MAR","URU","ITA","COL","CRO","BEL","JPN","USA","MEX","CRC"];
+const SPECIAL_DEFS = [
+  { key:"campeon",    label:"Campeón del Mundial", type:"team" },
+  { key:"subcampeon", label:"Subcampeón",          type:"team" },
+  { key:"goleador",   label:"Goleador del torneo", type:"name",
+    options:["Kylian Mbappé","Lionel Messi","Lautaro Martínez","Erling Haaland","Vinícius Jr.","Harry Kane","Julián Álvarez","Pedri"] },
+  { key:"arquero",    label:"Mejor arquero",       type:"name",
+    options:["Emiliano Martínez","Thibaut Courtois","Mike Maignan","Unai Simón","Alisson","Yann Sommer"] },
+  { key:"sorpresa",   label:"Sorpresa del torneo", type:"team" },
+  { key:"decepcion",  label:"Equipo decepción",    type:"team" },
+];
+
+function AdminSpecials() {
+  const [official, setOfficial] = useState({});
+  const [drafts, setDrafts] = useState({});
+  const [saving, setSaving] = useState(null);
+
+  useEffect(() => {
+    const unsub = window.ProdeDB?.subscribeSpecialResults?.((res) => setOfficial(res || {}));
+    return () => unsub && unsub();
+  }, []);
+
+  const setDraft = (key, value) => setDrafts((d) => ({ ...d, [key]: value }));
+
+  const confirm = async (key) => {
+    const value = String(drafts[key] || "").trim();
+    if (!value) return;
+    setSaving(key);
+    try {
+      await window.ProdeDB?.confirmSpecialResult?.(key, value);
+      setDrafts((d) => { const n = { ...d }; delete n[key]; return n; });
+    } catch (e) {
+      console.error("[Prode Refugio] confirmar especial", e);
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  return (
+    <div>
+      <div style={{
+        padding:"10px 13px", borderRadius:14, marginBottom:12,
+        background:"var(--char-800)", border:"1px solid var(--char-700)",
+        fontSize:11, color:"var(--char-300)", lineHeight:1.5,
+      }}>
+        Confirmar reparte <span style={{color:"var(--neon-citrus)", fontWeight:700}}>+5</span> a
+        cada jugador que acertó. Corregir y re-confirmar recalcula sin duplicar.
+      </div>
+      {SPECIAL_DEFS.map((def) => {
+        const current = official[def.key];
+        const draft = drafts[def.key] || "";
+        const busy = saving === def.key;
+        return (
+          <div key={def.key} style={{
+            borderRadius:18, padding:"14px 14px 12px", marginBottom:10,
+            background:"var(--char-800)",
+            border:`1px solid ${current ? "var(--neon-citrus)" : "var(--char-700)"}`,
+          }}>
+            <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", gap:8, marginBottom:8}}>
+              <div style={{
+                fontFamily:"var(--font-title)", fontSize:14, color:"var(--cream-100)",
+                textTransform:"uppercase", letterSpacing:"0.02em",
+              }}>{def.label}</div>
+              {current
+                ? <Pill tone="done">OFICIAL: {current}</Pill>
+                : <Pill tone="open">Sin confirmar</Pill>}
+            </div>
+            {def.type === "team" ? (
+              <div style={{display:"flex", gap:6, overflowX:"auto", padding:"2px 0 6px", scrollbarWidth:"none"}}>
+                {SPECIAL_TEAM_OPTS.map((c) => {
+                  const on = draft === c;
+                  return (
+                    <button key={c} onClick={()=>setDraft(def.key, c)} style={{
+                      flexShrink:0, padding:6, borderRadius:12, cursor:"pointer",
+                      background: on ? "var(--char-700)" : "var(--char-900)",
+                      border:`1.5px solid ${on ? "var(--neon-citrus)" : "var(--char-700)"}`,
+                      display:"flex", flexDirection:"column", alignItems:"center", gap:4, minWidth:50,
+                    }}>
+                      <Flag code={c} size={24}/>
+                      <span style={{fontSize:8, color:"var(--cream-100)", letterSpacing:"0.14em", fontWeight:700}}>{c}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div>
+                <div style={{display:"flex", gap:6, flexWrap:"wrap", marginBottom:8}}>
+                  {def.options.map((n) => {
+                    const on = draft === n;
+                    return (
+                      <button key={n} onClick={()=>setDraft(def.key, n)} style={{
+                        padding:"6px 11px", borderRadius:999, cursor:"pointer",
+                        border:`1px solid ${on ? "var(--neon-citrus)" : "var(--char-600)"}`,
+                        background: on ? "var(--neon-citrus)" : "transparent",
+                        color: on ? "var(--char-900)" : "var(--cream-100)",
+                        fontSize:10, fontWeight:600, fontFamily:"var(--font-body)",
+                      }}>{n}</button>
+                    );
+                  })}
+                </div>
+                <input
+                  value={draft}
+                  placeholder="U otro nombre..."
+                  onChange={(e)=>setDraft(def.key, e.target.value)}
+                  style={{
+                    width:"100%", height:34, borderRadius:10, padding:"0 12px",
+                    background:"var(--char-900)", color:"var(--cream-100)",
+                    border:"1px solid var(--char-600)", outline:"none",
+                    fontFamily:"var(--font-body)", fontSize:12, boxSizing:"border-box",
+                  }}/>
+              </div>
+            )}
+            <div style={{marginTop:8, display:"flex", justifyContent:"flex-end"}}>
+              <Btn size="sm" variant="accent" onClick={()=>confirm(def.key)}>
+                {busy ? "Repartiendo..." : current ? "Corregir y re-confirmar" : "Confirmar"}
+              </Btn>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+window.AdminSpecials = AdminSpecials;
 
 window.Admin = Admin;

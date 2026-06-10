@@ -198,7 +198,7 @@ window.RANKING = [
   { rank:2, name:"Sofi Vargas",          avatar:"SV", pts:138, exact:6, winner:16, streak:3,
     nat:"CRC", badge:"casi",    trend:"up", you:false },
   { rank:3, name:"Diego Maradoneta",     avatar:"DM", pts:131, exact:7, winner:12, streak:2,
-    nat:"ARG", badge:"scaloneta", trend:"down", you:false },
+    nat:"ARG", badge:"profeta", trend:"down", you:false },
   { rank:4, name:"Lalo \"Pulpo\" Méndez",avatar:"LM", pts:128, exact:5, winner:15, streak:4,
     nat:"MEX", badge:"casi",    trend:"up", you:false },
   { rank:5, name:"Tomás Belaún (vos)",   avatar:"TB", pts:122, exact:6, winner:12, streak:3,
@@ -219,13 +219,13 @@ window.RANKING = [
     nat:"CRC", badge:"rey",     trend:"down", you:false },
 ];
 
-// Badges — clave → metadata
+// Badges — clave → metadata. Orden = prestigio (el primero ganado es el que
+// se muestra en la fila compacta del ranking). Todos se otorgan con datos reales.
 window.BADGES = {
-  profeta:   { label:"El Profeta",      sub:"6+ resultados exactos",   emoji:"◎", color:"var(--neon-citrus)" },
-  casi:      { label:"Casi Brujo",      sub:"3 exactos seguidos",      emoji:"✦", color:"var(--orange-500)" },
-  scaloneta: { label:"Modo Scaloneta",  sub:"Le pega a la celeste",    emoji:"★", color:"var(--cream-100)" },
-  cafe:      { label:"Café y Fulbo",    sub:"Predice antes del café",  emoji:"☕", color:"var(--tan-300)" },
-  rey:       { label:"Rey del Refugio", sub:"Top 3 de la semana",      emoji:"♛", color:"var(--orange-400)" },
+  profeta: { label:"El Profeta",      sub:"6+ resultados exactos", emoji:"◎", color:"var(--neon-citrus)" },
+  rey:     { label:"Rey del Refugio", sub:"Ganó una semana",       emoji:"♛", color:"var(--orange-400)" },
+  casi:    { label:"Casi Brujo",      sub:"3+ resultados exactos", emoji:"✦", color:"var(--orange-500)" },
+  cafe:    { label:"Café y Fulbo",    sub:"Está jugando el prode", emoji:"☕", color:"var(--tan-300)" },
 };
 
 // Premios — del torneo (posiciones del ranking) + premio semanal rotativo.
@@ -259,12 +259,6 @@ window.ANNOUNCEMENTS = [
   { id:"a3", icon:"trophy", title:"Premio fecha 1", body:"Mejor puntaje de la fecha se lleva una cena para dos en Refugio.", tag:"FECHA 1", color:"sage" },
 ];
 
-// Predicciones especiales del usuario
-window.MY_SPECIALS = {
-  campeon:    "ARG",
-  subcampeon: "FRA",
-  goleador:   "Kylian Mbappé",
-  arquero:    "Emiliano Martínez",
-  sorpresa:   "MAR",
-  decepcion:  "GER",
-};
+// Predicciones especiales del usuario: SIN demo. Arrancan vacías; los picks
+// reales viven en specialPredictions/{uid} (read-back en firebase-service).
+window.MY_SPECIALS = {};
