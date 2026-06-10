@@ -83,6 +83,11 @@ function Ranking({ go }) {
         </div>
       )}
 
+      {/* premio de la semana */}
+      {rows.length > 0 && (
+        <WeeklyPrize players={players}/>
+      )}
+
       {/* you sticky */}
       {you && (
         <div style={{padding:"14px 16px 4px"}}>
@@ -278,6 +283,86 @@ function RankRow({ r, expanded, onClick }) {
           <div style={{
             fontSize:10, color:"var(--char-400)", marginLeft:"auto", letterSpacing:"0.04em",
           }}>Racha: <span style={{color:"var(--cream-100)"}}>{r.streak} aciertos</span></div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* Líder de la semana en curso (premio rotativo) + historial de ganadores.
+   Lee los buckets weekly.s{N} del mismo snapshot de players del ranking. */
+function WeeklyPrize({ players }) {
+  const W = window.ProdeWeekly;
+  const prize = window.PRIZES?.weekly;
+  if (!W || !prize) return null;
+  const weekId = W.currentWeekId(Date.now());
+  const leaders = W.weeklyLeaders(players, weekId);
+  const history = W.weeklyHistory(players, weekId);
+  const initials = (n) => window.ProdeRanking?.initials?.(n) || "JR";
+
+  return (
+    <div style={{padding:"14px 16px 0"}}>
+      {/* tarjeta semana en curso */}
+      <div style={{
+        borderRadius:18, padding:"14px 16px",
+        background:"linear-gradient(135deg, var(--orange-700), var(--char-800))",
+        border:"1px solid var(--orange-500)",
+      }}>
+        <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", gap:8}}>
+          <Eyebrow color="var(--neon-citrus)">{W.weekLabel(weekId)} · {prize.title}</Eyebrow>
+          <Eyebrow color="var(--cream-100)" style={{fontSize:9}}>{prize.reward}</Eyebrow>
+        </div>
+        {leaders.length === 0 ? (
+          <div style={{fontSize:12, color:"var(--char-200)", marginTop:8, lineHeight:1.4}}>
+            Nadie sumó puntos esta semana todavía. El que más haga se lleva el premio.
+          </div>
+        ) : (
+          <div style={{display:"flex", flexDirection:"column", gap:8, marginTop:10}}>
+            {leaders.map((l) => (
+              <div key={l.id} style={{display:"flex", alignItems:"center", gap:10}}>
+                <Avatar initials={initials(l.name)} size={32} tone="citrus"/>
+                <div style={{flex:1, minWidth:0}}>
+                  <div style={{
+                    fontFamily:"var(--font-title)", fontSize:14, color:"var(--cream-100)",
+                    textTransform:"uppercase", letterSpacing:"0.02em",
+                    whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis",
+                  }}>{l.name}</div>
+                  <div style={{fontSize:9, color:"var(--char-300)", letterSpacing:"0.12em", marginTop:2}}>
+                    {leaders.length > 1 ? "EMPATADOS · LO RESUELVE EL BAR" : "LÍDER DE LA SEMANA"}
+                  </div>
+                </div>
+                <div style={{textAlign:"right"}}>
+                  <div style={{fontFamily:"var(--font-title)", fontSize:20, color:"var(--neon-citrus)", lineHeight:1}}>{l.points}</div>
+                  <div style={{fontSize:8, color:"var(--char-400)", letterSpacing:"0.18em", marginTop:2}}>PTS SEMANA</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* historial de ganadores semanales */}
+      {history.length > 0 && (
+        <div style={{
+          marginTop:8, borderRadius:14, overflow:"hidden",
+          background:"var(--char-800)", border:"1px solid var(--char-700)",
+        }}>
+          <div style={{padding:"10px 14px 6px"}}>
+            <Eyebrow color="var(--neon-citrus)" style={{fontSize:9}}>Ganadores semanales</Eyebrow>
+          </div>
+          {history.map((h, i) => (
+            <div key={h.weekId} style={{
+              padding:"9px 14px", display:"flex", alignItems:"center", gap:10,
+              borderTop: i === 0 ? "1px solid var(--char-700)" : "1px dashed var(--char-700)",
+            }}>
+              <div style={{fontSize:10, color:"var(--char-400)", letterSpacing:"0.08em", width:118, flexShrink:0}}>{h.label}</div>
+              <div style={{
+                flex:1, minWidth:0, fontSize:12, color:"var(--cream-100)", fontWeight:600,
+                whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis",
+              }}>{h.leaders.map(l => l.name).join(" + ")}</div>
+              <div style={{fontFamily:"var(--font-title)", fontSize:13, color:"var(--neon-citrus)"}}>{h.leaders[0].points} pts</div>
+            </div>
+          ))}
         </div>
       )}
     </div>
