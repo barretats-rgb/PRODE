@@ -266,10 +266,20 @@
       batch.set(collection("predictions").doc(`${pp.playerId}_${matchId}`), { points: pp.points, kind: pp.kind }, { merge: true });
       if (++writes >= 450) await flush();
     }
+    // Semana del torneo del partido (por su kickoff, no por cuándo se carga el
+    // resultado). Si el fixture no tiene el partido, no se acumula semanal.
+    const matchInfo = (window.MATCHES || []).find((m) => m.id === matchId);
+    const weekId = matchInfo?.kickoffAt && window.ProdeWeekly
+      ? window.ProdeWeekly.weekIdForDate(matchInfo.kickoffAt)
+      : null;
     for (const [playerId, d] of Object.entries(perPlayer)) {
-      batch.set(collection("players").doc(playerId), {
+      const patch = {
         points: inc(d.points), exact: inc(d.exact), winner: inc(d.winner), played: inc(d.played),
-      }, { merge: true });
+      };
+      // Bucket semanal: mismo delta idempotente que el total. set+merge con mapa
+      // anidado mergea recursivamente (no pisa otras semanas).
+      if (weekId) patch.weekly = { [weekId]: { points: inc(d.points), exact: inc(d.exact) } };
+      batch.set(collection("players").doc(playerId), patch, { merge: true });
       if (++writes >= 450) await flush();
     }
     await flush();
