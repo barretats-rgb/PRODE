@@ -219,13 +219,13 @@ window.RANKING = [
     nat:"CRC", badge:"rey",     trend:"down", you:false },
 ];
 
-// Badges — clave → metadata
+// Badges — clave → metadata. Orden = prestigio (el primero ganado es el que
+// se muestra en la fila compacta del ranking). Todos se otorgan con datos reales.
 window.BADGES = {
-  profeta:   { label:"El Profeta",      sub:"6+ resultados exactos",   emoji:"◎", color:"var(--neon-citrus)" },
-  casi:      { label:"Casi Brujo",      sub:"3 exactos seguidos",      emoji:"✦", color:"var(--orange-500)" },
-  scaloneta: { label:"Modo Scaloneta",  sub:"Le pega a la celeste",    emoji:"★", color:"var(--cream-100)" },
-  cafe:      { label:"Café y Fulbo",    sub:"Predice antes del café",  emoji:"☕", color:"var(--tan-300)" },
-  rey:       { label:"Rey del Refugio", sub:"Top 3 de la semana",      emoji:"♛", color:"var(--orange-400)" },
+  profeta: { label:"El Profeta",      sub:"6+ resultados exactos", emoji:"◎", color:"var(--neon-citrus)" },
+  rey:     { label:"Rey del Refugio", sub:"Ganó una semana",       emoji:"♛", color:"var(--orange-400)" },
+  casi:    { label:"Casi Brujo",      sub:"3+ resultados exactos", emoji:"✦", color:"var(--orange-500)" },
+  cafe:    { label:"Café y Fulbo",    sub:"Está jugando el prode", emoji:"☕", color:"var(--tan-300)" },
 };
 
 // Premios — del torneo (posiciones del ranking) + premio semanal rotativo.
