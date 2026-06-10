@@ -135,8 +135,8 @@ function Specials({ go }) {
       </div>
 
       <div style={{padding:"18px 16px 0"}}>
-        <Btn full variant={locked ? "dark" : "accent"} size="lg" icon={locked ? "lock" : "check"} onClick={saveAndClose}>
-          {locked ? "Especiales cerradas" : "Listo"}
+        <Btn full variant={locked ? "dark" : "accent"} size="lg" icon={locked ? "lock" : "save"} onClick={saveAndClose}>
+          {locked ? "Especiales cerradas" : "Guardar especiales"}
         </Btn>
         {!locked && (
           <div style={{textAlign:"center", marginTop:10, fontSize:11, color:"var(--char-400)", letterSpacing:"0.04em"}}>
