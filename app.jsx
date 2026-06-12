@@ -273,7 +273,7 @@ function DesktopAdmin() {
             <span>FECHA</span><span>Partido</span><span>Resultado</span><span>Estado</span><span>Sede</span>
             <span>Hora</span><span></span>
           </div>
-          {matches.slice(0, 9).map((m,i) => {
+          {matches.map((m,i) => {
             const saveRow = () => {
               const scoreA = Number(m.scoreA || 0);
               const scoreB = Number(m.scoreB || 0);
@@ -285,7 +285,7 @@ function DesktopAdmin() {
             };
             return (
             <div key={m.id} style={{
-              padding:"12px 16px", borderBottom: i<8 ? "1px solid var(--char-700)" : 0,
+              padding:"12px 16px", borderBottom: i < matches.length - 1 ? "1px solid var(--char-700)" : 0,
               display:"grid", gridTemplateColumns:"70px 1.35fr 120px 120px 1fr 90px 80px", gap:12,
               alignItems:"center", fontSize:12,
             }}>

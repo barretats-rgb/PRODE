@@ -182,10 +182,10 @@ function Admin({ go }) {
             borderRadius:18, overflow:"hidden",
             background:"var(--char-800)", border:"1px solid var(--char-700)",
           }}>
-            {matches.slice(0, 12).map((m, i) => (
+            {matches.map((m, i) => (
               <div key={m.id} style={{
                 padding:"12px 13px",
-                borderBottom: i < 11 ? "1px solid var(--char-700)" : 0,
+                borderBottom: i < matches.length - 1 ? "1px solid var(--char-700)" : 0,
                 display:"flex", alignItems:"center", gap:10,
               }}>
                 <Flag code={m.a} size={22}/>
