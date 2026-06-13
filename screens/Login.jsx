@@ -26,8 +26,8 @@ function Login() {
     <div style={{
       minHeight: "100vh", display: "flex", flexDirection: "column",
       justifyContent: "center", alignItems: "center", gap: 22, padding: "32px 22px",
-      background: "linear-gradient(180deg, rgba(26,25,22,0.2) 0%, var(--char-900) 100%), url('assets/photo-bar-night.jpg')",
-      backgroundSize: "cover", backgroundPosition: "center",
+      background: "linear-gradient(180deg, rgba(26,25,22,0.2) 0%, var(--char-900) 100%), url('assets/messi.jpg')",
+      backgroundSize: "cover", backgroundPosition: "center top",
     }}>
       <div style={{
         fontFamily: "var(--font-display)", fontSize: 44, lineHeight: 0.85,

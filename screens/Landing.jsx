@@ -23,8 +23,8 @@ function Landing({ go }) {
       {/* HERO */}
       <div style={{
         position:"relative", margin:"0", padding:"24px 18px 28px",
-        background:"linear-gradient(180deg, rgba(26,25,22,0) 0%, var(--char-900) 100%), url('assets/photo-bar-night.jpg')",
-        backgroundSize:"cover", backgroundPosition:"center",
+        background:"linear-gradient(180deg, rgba(26,25,22,0) 0%, var(--char-900) 100%), url('assets/messi.jpg')",
+        backgroundSize:"cover", backgroundPosition:"center top",
         overflow:"hidden",
       }}>
         {/* grain */}
