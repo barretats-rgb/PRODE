@@ -36,9 +36,15 @@ function Matches({ go }) {
   };
 
   const all = window.ProdeStore?.getMatches?.() || window.MATCHES;
+  // Día calendario de Costa Rica (UTC−6) para el filtro "Hoy".
+  const crDayKey = (ms) => {
+    const d = new Date(ms - 6 * 60 * 60 * 1000);
+    return `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
+  };
+  const todayKey = crDayKey(now);
   const filtered = all.filter(m => {
     if (filter === "abiertos") return m.status === "abierto";
-    if (filter === "hoy")      return m.date.startsWith("Jue 11") || m.status === "vivo";
+    if (filter === "hoy")      return m.status === "vivo" || (m.kickoffAt && crDayKey(Date.parse(m.kickoffAt)) === todayKey);
     if (filter === "mios")     return preds[m.id];
     return true;
   });
@@ -111,6 +117,13 @@ function Matches({ go }) {
 
       {/* match groups */}
       <div style={{padding:"12px 16px 0"}}>
+        {filtered.length === 0 && (
+          <div style={{padding:"28px 16px", textAlign:"center", fontSize:13, color:"var(--char-300)", lineHeight:1.5}}>
+            {filter === "hoy" ? "No hay partidos hoy. Mirá el filtro \"Todos\" para los próximos."
+              : filter === "mios" ? "Todavía no cargaste predicciones."
+              : "No hay partidos para este filtro."}
+          </div>
+        )}
         {Object.entries(groups).map(([date, ms]) => (
           <div key={date}>
             <div style={{
