@@ -99,14 +99,17 @@ function App() {
 
   const go = (next) => setScreen(next);
 
-  // GATE 1: cargando, mientras se resuelve la sesión (evita parpadear el home antes del Login).
-  // onAuthChange emite el estado actual al suscribir, así que esto dura ~1 frame.
-  if (auth === undefined && window.ProdeDB) {
+  const fbReady = window.ProdeDB?.isReady?.();
+
+  // GATE 1: cargando. Mientras no llegó el primer estado (auth === undefined) o,
+  // con Firebase configurado, mientras todavía restaura la sesión guardada
+  // (authResolved === false). Esto evita el flash del Login al entrar logueado.
+  if ((auth === undefined && window.ProdeDB) || (fbReady && !auth?.authResolved)) {
     return <div style={{minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--char-400)"}}>Cargando...</div>;
   }
 
-  // GATE 2: sin sesión → Login (sólo si Firebase está configurado; sin config, modo local sigue).
-  if (window.ProdeDB?.isReady?.() && (!auth || !auth.user)) {
+  // GATE 2: sesión ya resuelta y sin usuario → Login (sin config Firebase, modo local sigue).
+  if (fbReady && auth?.authResolved && !auth.user) {
     return <Login/>;
   }
 

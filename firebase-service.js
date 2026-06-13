@@ -13,7 +13,9 @@
     window.FIREBASE_CONFIG.projectId &&
     window.FIREBASE_CONFIG.projectId !== placeholderProject;
 
-  const state = { ready: false, user: null, player: null, db: null, auth: null, matchResults: {}, myPredictions: {}, mySpecials: {}, myPredsUnsub: null };
+  // authResolved: false hasta que onAuthStateChanged emite por primera vez (Firebase
+  // restaura la sesión guardada async). Evita mostrar el Login mientras tanto.
+  const state = { ready: false, authResolved: false, user: null, player: null, db: null, auth: null, matchResults: {}, myPredictions: {}, mySpecials: {}, myPredsUnsub: null };
   const listeners = new Set();
 
   function firestoreNow() {
@@ -31,7 +33,7 @@
   }
 
   function snapshot() {
-    return { user: state.user, player: state.player, isAdmin: isAdmin(), ready: state.ready };
+    return { user: state.user, player: state.player, isAdmin: isAdmin(), ready: state.ready, authResolved: state.authResolved };
   }
 
   function notify() {
@@ -105,6 +107,7 @@
     }, (e) => console.error("[Prode Refugio] matches snapshot", e));
 
     state.auth.onAuthStateChanged(async (user) => {
+      state.authResolved = true; // Firebase ya resolvió la sesión (haya o no usuario).
       if (state.myPredsUnsub) { state.myPredsUnsub(); state.myPredsUnsub = null; }
       if (user) {
         state.user = user;
