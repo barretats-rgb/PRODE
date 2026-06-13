@@ -312,14 +312,12 @@ function ToggleSwitch({ on:initOn }) {
 /* ---------- AdminSpecials: respuestas oficiales de los especiales ----------
    Compartido entre el Admin mobile y el DesktopAdmin (app.jsx). Confirmar
    reparte +5 a cada acertante (idempotente; corregir y re-confirmar recalcula). */
-const SPECIAL_TEAM_OPTS = ["ARG","BRA","FRA","ESP","ENG","POR","GER","NED","MAR","URU","ITA","COL","CRO","BEL","JPN","USA","MEX","CRC"];
+const SPECIAL_TEAM_OPTS = window.SPECIAL_TEAMS || ["ARG","BRA","FRA","ESP","ENG","POR","GER","NED","MAR","URU","COL","CRO","BEL","JPN","USA","MEX"];
 const SPECIAL_DEFS = [
   { key:"campeon",    label:"Campeón del Mundial", type:"team" },
   { key:"subcampeon", label:"Subcampeón",          type:"team" },
-  { key:"goleador",   label:"Goleador del torneo", type:"name",
-    options:["Kylian Mbappé","Lionel Messi","Lautaro Martínez","Erling Haaland","Vinícius Jr.","Harry Kane","Julián Álvarez","Pedri"] },
-  { key:"arquero",    label:"Mejor arquero",       type:"name",
-    options:["Emiliano Martínez","Thibaut Courtois","Mike Maignan","Unai Simón","Alisson","Yann Sommer"] },
+  { key:"goleador",   label:"Goleador del torneo", type:"name", options: window.SPECIAL_SCORERS },
+  { key:"arquero",    label:"Mejor arquero",       type:"name", options: window.SPECIAL_KEEPERS },
   { key:"sorpresa",   label:"Sorpresa del torneo", type:"team" },
   { key:"decepcion",  label:"Equipo decepción",    type:"team" },
 ];

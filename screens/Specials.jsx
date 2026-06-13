@@ -46,7 +46,7 @@ function Specials({ go }) {
   };
 
   const teamPick = (key) => {
-    const opts = ["ARG","BRA","FRA","ESP","ENG","POR","GER","NED","MAR","URU","ITA","COL","CRO","BEL","JPN","USA","MEX","CRC"];
+    const opts = window.SPECIAL_TEAMS || ["ARG","BRA","FRA","ESP","ENG","POR","GER","NED","MAR","URU","COL","CRO","BEL","JPN","USA","MEX"];
     return (
       <div style={{display:"flex", gap:8, overflowX:"auto", padding:"8px 16px 4px", marginLeft:-16, marginRight:-16, scrollbarWidth:"none"}}>
         {opts.map(c => {
@@ -99,13 +99,11 @@ function Specials({ go }) {
         </SpecialRow>
 
         <SpecialRow icon="target" tone="orange" label="Goleador del torneo" sub="Bota de oro" current={sp.goleador} result={resultFor("goleador")}>
-          <ScorerPick disabled={locked} value={sp.goleador} onChange={v=>pick("goleador", v)}/>
+          <ScorerPick disabled={locked} value={sp.goleador} onChange={v=>pick("goleador", v)} options={window.SPECIAL_SCORERS}/>
         </SpecialRow>
 
         <SpecialRow icon="shield" tone="sage" label="Mejor arquero" sub="Guante de oro" current={sp.arquero} result={resultFor("arquero")}>
-          <ScorerPick disabled={locked} value={sp.arquero} onChange={v=>pick("arquero", v)} options={[
-            "Emiliano Martínez", "Thibaut Courtois", "Mike Maignan", "Unai Simón", "Alisson", "Yann Sommer"
-          ]}/>
+          <ScorerPick disabled={locked} value={sp.arquero} onChange={v=>pick("arquero", v)} options={window.SPECIAL_KEEPERS}/>
         </SpecialRow>
 
         <SpecialRow icon="sparkles" tone="citrus" label="Sorpresa del torneo" sub="Cuartos o más, inesperado" current={sp.sorpresa} result={resultFor("sorpresa")}>

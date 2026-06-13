@@ -259,6 +259,38 @@ window.ANNOUNCEMENTS = [
   { id:"a3", icon:"trophy", title:"Premio fecha 1", body:"Mejor puntaje de la fecha se lleva una cena para dos en Refugio.", tag:"FECHA 1", color:"sage" },
 ];
 
+// Opciones de las predicciones especiales (compartidas por la pantalla del jugador
+// y el Admin, para que nunca se desincronicen).
+// Equipos: TODAS las selecciones del torneo (derivadas de la fixture), con las
+// candidatas primero para tenerlas a mano sin scrollear.
+window.SPECIAL_TEAMS = (function () {
+  const enFixture = new Set();
+  (window.MATCHES || []).forEach((m) => { enFixture.add(m.a); enFixture.add(m.b); });
+  const favoritos = ["ARG","BRA","FRA","ESP","ENG","POR","GER","NED","BEL","CRO","URU","COL","MAR","MEX","USA","JPN","KOR","SUI"];
+  const primero = favoritos.filter((c) => enFixture.has(c));
+  const resto = [...enFixture]
+    .filter((c) => !primero.includes(c))
+    .sort((a, b) => String(window.TEAMS[a] || a).localeCompare(String(window.TEAMS[b] || b)));
+  return [...primero, ...resto];
+})();
+
+// Candidatos a goleador (Bota de Oro) — figuras del torneo.
+window.SPECIAL_SCORERS = [
+  "Kylian Mbappé", "Erling Haaland", "Harry Kane", "Lautaro Martínez", "Julián Álvarez",
+  "Lionel Messi", "Vinícius Jr.", "Rodrygo", "Raphinha", "Lamine Yamal",
+  "Álvaro Morata", "Cristiano Ronaldo", "Rafael Leão", "Victor Osimhen", "Mohamed Salah",
+  "Romelu Lukaku", "Kevin De Bruyne", "Memphis Depay", "Cody Gakpo", "Jude Bellingham",
+  "Bukayo Saka", "Florian Wirtz", "Jamal Musiala", "Dušan Vlahović", "Christian Pulisic",
+  "Hirving Lozano",
+];
+
+// Candidatos a mejor arquero (Guante de Oro).
+window.SPECIAL_KEEPERS = [
+  "Emiliano Martínez", "Thibaut Courtois", "Mike Maignan", "Unai Simón", "Alisson",
+  "Ederson", "Yann Sommer", "Jordan Pickford", "Marc-André ter Stegen", "Diogo Costa",
+  "Gianluigi Donnarumma", "Yassine Bounou", "Guillermo Ochoa",
+];
+
 // Predicciones especiales del usuario: SIN demo. Arrancan vacías; los picks
 // reales viven en specialPredictions/{uid} (read-back en firebase-service).
 window.MY_SPECIALS = {};
