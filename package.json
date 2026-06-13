@@ -5,5 +5,8 @@
   "description": "Prode Refugio - Mundial 2026",
   "scripts": {
     "test": "node --test"
+  },
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1"
   }
 }
