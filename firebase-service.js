@@ -323,6 +323,17 @@
     return { ok: true };
   }
 
+  // Datos privados (teléfono/email) de todos los jugadores. SOLO admin (las reglas
+  // lo exigen). cb recibe un mapa { uid: { phone, email } }. Devuelve unsub.
+  function subscribePlayersPrivate(cb) {
+    if (!state.ready) { cb({}); return () => {}; }
+    return collection("playerPrivate").onSnapshot((snap) => {
+      const map = {};
+      snap.forEach((doc) => { map[doc.id] = doc.data(); });
+      cb(map);
+    }, (e) => console.error("[Prode Refugio] playerPrivate snapshot", e));
+  }
+
   // Respuestas oficiales de especiales en vivo (meta/specialResults). Devuelve unsub.
   function subscribeSpecialResults(cb) {
     if (!state.ready) { cb({}); return () => {}; }
@@ -383,6 +394,7 @@
     getMySpecials: () => state.mySpecials,
     subscribeRanking,
     subscribePlayerCount,
+    subscribePlayersPrivate,
     finalizeMatch,
     expelPlayer,
     subscribeSpecialResults,

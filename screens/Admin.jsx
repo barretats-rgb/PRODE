@@ -39,11 +39,17 @@ function Admin({ go }) {
   };
 
   const [players, setPlayers] = useState([]);
+  const [priv, setPriv] = useState({}); // { uid: { phone, email } } — sólo admin
   const [confirmExpel, setConfirmExpel] = useState(null); // uid con confirmación pendiente
   const [expelling, setExpelling] = useState(null);
 
   useEffect(() => {
     const unsub = window.ProdeDB?.subscribeRanking?.((list) => setPlayers(list));
+    return () => unsub && unsub();
+  }, []);
+
+  useEffect(() => {
+    const unsub = window.ProdeDB?.subscribePlayersPrivate?.((map) => setPriv(map || {}));
     return () => unsub && unsub();
   }, []);
 
@@ -257,6 +263,13 @@ function Admin({ go }) {
                     {r.nat ? <Flag code={r.nat} size={11}/> : null}
                     <span style={{fontSize:10, color:"var(--char-400)", letterSpacing:"0.04em"}}>{r.pts} pts</span>
                   </div>
+                  {priv[r.id]?.phone ? (
+                    <a href={`https://wa.me/${String(priv[r.id].phone).replace(/[^\d]/g, "")}`}
+                       target="_blank" rel="noreferrer"
+                       style={{fontSize:11, color:"var(--neon-citrus)", textDecoration:"none", marginTop:3, display:"inline-block"}}>
+                      {priv[r.id].phone}
+                    </a>
+                  ) : null}
                 </div>
                 {r.you ? (
                   <Pill tone="ghost">Vos</Pill>

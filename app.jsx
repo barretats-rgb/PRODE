@@ -174,11 +174,17 @@ function DesktopAdmin() {
   // Gestión de jugadores (mismo modelo que la vista compacta): ranking en vivo + expulsar.
   const [tab, setTab] = useState("resultados");
   const [players, setPlayers] = useState([]);
+  const [priv, setPriv] = useState({}); // { uid: { phone, email } } — sólo admin
   const [confirmExpel, setConfirmExpel] = useState(null);
   const [expelling, setExpelling] = useState(null);
 
   useEffect(() => {
     const unsub = window.ProdeDB?.subscribeRanking?.((list) => setPlayers(list));
+    return () => unsub && unsub();
+  }, []);
+
+  useEffect(() => {
+    const unsub = window.ProdeDB?.subscribePlayersPrivate?.((map) => setPriv(map || {}));
     return () => unsub && unsub();
   }, []);
 
@@ -357,10 +363,19 @@ function DesktopAdmin() {
                 }}>
                   <span style={{width:24, fontFamily:"var(--font-title)", fontSize:13, color:"var(--char-400)"}}>{r.rank}</span>
                   <Avatar initials={r.avatar} size={32} tone={r.you ? "citrus" : "olive"}/>
-                  <div style={{flex:1, minWidth:0, display:"flex", alignItems:"center", gap:8}}>
-                    <span style={{color:"var(--cream-100)", fontWeight:600, fontSize:13,
-                      whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis"}}>{r.name}</span>
-                    {r.nat ? <Flag code={r.nat} size={14}/> : null}
+                  <div style={{flex:1, minWidth:0}}>
+                    <div style={{display:"flex", alignItems:"center", gap:8}}>
+                      <span style={{color:"var(--cream-100)", fontWeight:600, fontSize:13,
+                        whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis"}}>{r.name}</span>
+                      {r.nat ? <Flag code={r.nat} size={14}/> : null}
+                    </div>
+                    {priv[r.id]?.phone ? (
+                      <a href={`https://wa.me/${String(priv[r.id].phone).replace(/[^\d]/g, "")}`}
+                         target="_blank" rel="noreferrer"
+                         style={{fontSize:12, color:"var(--neon-citrus)", textDecoration:"none"}}>
+                        {priv[r.id].phone}
+                      </a>
+                    ) : null}
                   </div>
                   <span style={{fontSize:12, color:"var(--char-300)", fontFamily:"var(--font-mono)", minWidth:60, textAlign:"right"}}>{r.pts} pts</span>
                   <div style={{width:170, textAlign:"right"}}>
