@@ -158,7 +158,7 @@ function Matches({ go }) {
                 textTransform:"uppercase", letterSpacing:"0.02em", marginTop:3,
               }}>Predicciones especiales</div>
               <div style={{fontSize:11, color:"var(--char-200)", marginTop:4}}>
-                Campeón, goleador, sorpresa →
+                Campeón, goleador, fair play →
               </div>
             </div>
           </div>

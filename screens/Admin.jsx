@@ -331,7 +331,7 @@ const SPECIAL_DEFS = [
   { key:"subcampeon", label:"Subcampeón",          type:"team" },
   { key:"goleador",   label:"Goleador del torneo", type:"name", options: window.SPECIAL_SCORERS },
   { key:"arquero",    label:"Mejor arquero",       type:"name", options: window.SPECIAL_KEEPERS },
-  { key:"sorpresa",   label:"Sorpresa del torneo", type:"team" },
+  { key:"continente", label:"Continente del ganador", type:"choice", options: window.SPECIAL_CONTINENTS },
   { key:"fairplay",   label:"Equipo Fair Play",    type:"team" },
 ];
 
@@ -429,16 +429,18 @@ function AdminSpecials() {
                     );
                   })}
                 </div>
-                <input
-                  value={draft}
-                  placeholder="U otro nombre..."
-                  onChange={(e)=>setDraft(def.key, e.target.value)}
-                  style={{
-                    width:"100%", height:34, borderRadius:10, padding:"0 12px",
-                    background:"var(--char-900)", color:"var(--cream-100)",
-                    border:"1px solid var(--char-600)", outline:"none",
-                    fontFamily:"var(--font-body)", fontSize:12, boxSizing:"border-box",
-                  }}/>
+                {def.type === "name" && (
+                  <input
+                    value={draft}
+                    placeholder="U otro nombre..."
+                    onChange={(e)=>setDraft(def.key, e.target.value)}
+                    style={{
+                      width:"100%", height:34, borderRadius:10, padding:"0 12px",
+                      background:"var(--char-900)", color:"var(--cream-100)",
+                      border:"1px solid var(--char-600)", outline:"none",
+                      fontFamily:"var(--font-body)", fontSize:12, boxSizing:"border-box",
+                    }}/>
+                )}
               </div>
             )}
             <div style={{marginTop:8, display:"flex", justifyContent:"flex-end"}}>

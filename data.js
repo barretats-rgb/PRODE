@@ -312,6 +312,10 @@ window.SPECIAL_KEEPERS = specialsByFixture([
   { name:"Matt Turner",          team:"USA" },
 ]);
 
+// Opciones del especial "Continente del ganador" (admin y jugador eligen de acá,
+// así los textos matchean exacto para el puntaje).
+window.SPECIAL_CONTINENTS = ["Europa", "Sudamérica", "Resto del mundo"];
+
 // Predicciones especiales del usuario: SIN demo. Arrancan vacías; los picks
 // reales viven en specialPredictions/{uid} (read-back en firebase-service).
 window.MY_SPECIALS = {};

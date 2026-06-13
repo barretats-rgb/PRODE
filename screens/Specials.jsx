@@ -106,8 +106,8 @@ function Specials({ go }) {
           <ScorerPick disabled={locked} value={sp.arquero} onChange={v=>pick("arquero", v)} options={window.SPECIAL_KEEPERS}/>
         </SpecialRow>
 
-        <SpecialRow icon="sparkles" tone="citrus" label="Sorpresa del torneo" sub="Cuartos o más, inesperado" current={sp.sorpresa} result={resultFor("sorpresa")}>
-          {teamPick("sorpresa")}
+        <SpecialRow icon="globe" tone="citrus" label="Continente del ganador" sub="¿De dónde sale el campeón?" current={sp.continente} result={resultFor("continente")}>
+          <ScorerPick disabled={locked} value={sp.continente} onChange={v=>pick("continente", v)} options={window.SPECIAL_CONTINENTS}/>
         </SpecialRow>
 
         <SpecialRow icon="heart-handshake" tone="sage" label="Equipo Fair Play" sub="El más limpio del torneo" current={sp.fairplay} result={resultFor("fairplay")}>
