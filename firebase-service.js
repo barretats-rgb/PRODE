@@ -156,6 +156,9 @@
     if (!state.ready) await init();
     if (!state.auth) throw new Error("Firebase no está configurado.");
     const provider = new window.firebase.auth.GoogleAuthProvider();
+    // Forzar el selector de cuentas de Google: deja elegir la cuenta que ya está
+    // abierta en el dispositivo en vez de mandar a escribir el mail.
+    provider.setCustomParameters({ prompt: "select_account" });
     return state.auth.signInWithPopup(provider);
   }
 
