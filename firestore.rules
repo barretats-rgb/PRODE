@@ -84,18 +84,18 @@ service cloud.firestore {
     }
 
     // ---- specialPredictions: campeón, goleador, etc. ----
-    // El dueño edita sus picks SOLO antes del arranque del Mundial
-    // (11 jun 2026 18:00 CR = 2026-06-12 00:00 UTC) y NUNCA el mapa
+    // El dueño edita sus picks SOLO hasta el cierre de especiales
+    // (16 jun 2026 18:00 CR = 2026-06-17 00:00 UTC) y NUNCA el mapa
     // `awarded` (puntaje ya repartido; lo escribe el fan-out del admin).
     match /specialPredictions/{uid} {
       allow read: if isSignedIn();
       allow create: if isAdmin()
         || (isOwner(uid)
-            && request.time < timestamp.date(2026, 6, 12)
+            && request.time < timestamp.date(2026, 6, 17)
             && !request.resource.data.keys().hasAny(['awarded']));
       allow update: if isAdmin()
         || (isOwner(uid)
-            && request.time < timestamp.date(2026, 6, 12)
+            && request.time < timestamp.date(2026, 6, 17)
             && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['awarded']));
       allow delete: if isAdmin();
     }

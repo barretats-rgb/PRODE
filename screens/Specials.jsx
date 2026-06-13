@@ -6,7 +6,7 @@ function Specials({ go }) {
   const [sp, setSp] = useState(window.ProdeStore?.getSpecials?.() || {});
   const [official, setOfficial] = useState({});
   const [toast, setToast] = useState(null);
-  // Cerradas desde el kickoff del primer partido (11 jun 18:00 CR).
+  // Cerradas desde el 16 jun 18:00 CR.
   const locked = window.ProdeSpecials?.specialsLocked?.() ?? false;
 
   useEffect(() => {
@@ -80,12 +80,12 @@ function Specials({ go }) {
           background:"linear-gradient(135deg, var(--orange-700), var(--char-800))",
           border:"1px solid var(--orange-500)",
         }}>
-          <Eyebrow color="var(--neon-citrus)">Cierran el 11 de junio · 18:00</Eyebrow>
+          <Eyebrow color="var(--neon-citrus)">Cierran el 16 de junio · 18:00</Eyebrow>
           <div style={{
             fontFamily:"var(--font-title)", fontSize:18, color:"var(--cream-100)",
             textTransform:"uppercase", letterSpacing:"0.02em", marginTop:6,
             textWrap:"balance",
-          }}>Una vez que arranca,<br/>no se cambia más.</div>
+          }}>Tenés hasta el 16 de junio.<br/>Después no se cambian más.</div>
         </div>
       </div>
 
@@ -140,7 +140,7 @@ function Specials({ go }) {
         </Btn>
         {!locked && (
           <div style={{textAlign:"center", marginTop:10, fontSize:11, color:"var(--char-400)", letterSpacing:"0.04em"}}>
-            Cada elección se guarda sola. Podés cambiarla hasta el 11 de junio.
+            Cada elección se guarda sola. Podés cambiarla hasta el 16 de junio.
           </div>
         )}
       </div>
