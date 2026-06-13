@@ -156,6 +156,11 @@ function Landing({ go }) {
         </Card>
       </div>
 
+      {/* INSTALAR APP (sólo si el dispositivo lo permite y no está instalada) */}
+      <div style={{padding:"18px 16px 0"}}>
+        <InstallApp/>
+      </div>
+
       {/* HOW IT WORKS — puntos */}
       <div style={{padding:"22px 16px 0"}}>
         <Eyebrow color="var(--neon-citrus)" style={{paddingLeft:4}}>Cómo se juega</Eyebrow>

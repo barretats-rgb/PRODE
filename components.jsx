@@ -484,6 +484,88 @@ function PrizesBlock({ heading = true }) {
   );
 }
 
+/* ---------- InstallApp: instalar la PWA ----------
+   Android/Chrome: botón real (evento beforeinstallprompt).
+   iOS/Safari: Apple no permite instalación programática → instrucciones.
+   Si ya está instalada (standalone) o el navegador no la ofrece, no se muestra. */
+function InstallApp() {
+  const [deferred, setDeferred] = useState(null);
+  const [iosHelp, setIosHelp] = useState(false);
+
+  const ua = (typeof navigator !== "undefined" && navigator.userAgent) || "";
+  const isIOS = /iphone|ipad|ipod/i.test(ua);
+  const isStandalone = (typeof window !== "undefined") && (
+    (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
+    window.navigator.standalone === true
+  );
+
+  useEffect(() => {
+    const onPrompt = (e) => { e.preventDefault(); setDeferred(e); };
+    window.addEventListener("beforeinstallprompt", onPrompt);
+    return () => window.removeEventListener("beforeinstallprompt", onPrompt);
+  }, []);
+
+  if (isStandalone) return null;          // ya está instalada
+  if (!isIOS && !deferred) return null;   // Android no la ofreció todavía / desktop: no mostramos
+
+  const onInstall = async () => {
+    if (isIOS) { setIosHelp(true); return; }
+    if (deferred) {
+      deferred.prompt();
+      try { await deferred.userChoice; } catch (e) { /* cancelado */ }
+      setDeferred(null);
+    }
+  };
+
+  return (
+    <div style={{
+      borderRadius:18, padding:"14px 16px",
+      background:"var(--char-800)", border:"1px solid var(--neon-citrus)",
+      display:"flex", alignItems:"center", gap:14,
+    }}>
+      <div style={{
+        width:46, height:46, borderRadius:14, flexShrink:0,
+        background:"var(--char-900)", border:"1px solid var(--char-700)",
+        display:"flex", alignItems:"center", justifyContent:"center",
+      }}>
+        <i data-lucide="download" style={{width:22, height:22, color:"var(--neon-citrus)"}}></i>
+      </div>
+      <div style={{flex:1, minWidth:0}}>
+        <div style={{
+          fontFamily:"var(--font-title)", fontSize:15, color:"var(--cream-100)",
+          textTransform:"uppercase", letterSpacing:"0.02em",
+        }}>Instalá la app</div>
+        <div style={{fontSize:11, color:"var(--char-300)", marginTop:2}}>Tenela en tu inicio, como una app más.</div>
+      </div>
+      <Btn size="sm" variant="accent" onClick={onInstall}>Instalar</Btn>
+
+      {iosHelp && (
+        <div onClick={()=>setIosHelp(false)} style={{
+          position:"fixed", inset:0, zIndex:120, background:"rgba(0,0,0,0.72)",
+          display:"flex", alignItems:"flex-end", justifyContent:"center", padding:14,
+        }}>
+          <div onClick={(e)=>e.stopPropagation()} style={{
+            width:"100%", maxWidth:420, borderRadius:22, padding:"20px 18px 22px",
+            background:"var(--char-800)", border:"1px solid var(--char-700)",
+          }}>
+            <div style={{
+              fontFamily:"var(--font-title)", fontSize:18, color:"var(--cream-100)",
+              textTransform:"uppercase", letterSpacing:"0.02em",
+            }}>Instalar en iPhone</div>
+            <div style={{fontSize:13, color:"var(--char-200)", lineHeight:1.7, marginTop:10}}>
+              Tiene que ser desde <b style={{color:"var(--neon-citrus)"}}>Safari</b>:<br/>
+              1. Tocá el botón <b style={{color:"var(--neon-citrus)"}}>Compartir</b> (el cuadrado con la flecha ↑).<br/>
+              2. Elegí <b style={{color:"var(--neon-citrus)"}}>"Agregar a inicio"</b>.<br/>
+              3. Tocá <b style={{color:"var(--neon-citrus)"}}>Agregar</b>. ¡Listo!
+            </div>
+            <Btn full size="md" variant="accent" style={{marginTop:16}} onClick={()=>setIosHelp(false)}>Entendido</Btn>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ---------- Card (generic) ---------- */
 function Card({ children, style, dark = true, glow = false, padding = 16 }) {
   return (
@@ -499,5 +581,5 @@ function Card({ children, style, dark = true, glow = false, padding = 16 }) {
 
 Object.assign(window, {
   Flag, Eyebrow, Pill, Btn, AppBar, TabBar, Avatar, BadgeChip,
-  Countdown, MatchRow, NumStepper, Card, PrizesBlock,
+  Countdown, MatchRow, NumStepper, Card, PrizesBlock, InstallApp,
 });

@@ -275,5 +275,14 @@
   Refugio Tamarindo · Mundial 2026 · 11 Jun → 19 Jul · <b>Hecho en madera oscura y noche tropical</b>
 </div>
 
+<!-- Service worker: habilita "Instalar app" en Android/Chrome -->
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("sw.js").catch(function () {});
+    });
+  }
+</script>
+
 </body>
 </html>
