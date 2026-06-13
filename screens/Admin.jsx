@@ -332,7 +332,7 @@ const SPECIAL_DEFS = [
   { key:"goleador",   label:"Goleador del torneo", type:"name", options: window.SPECIAL_SCORERS },
   { key:"arquero",    label:"Mejor arquero",       type:"name", options: window.SPECIAL_KEEPERS },
   { key:"sorpresa",   label:"Sorpresa del torneo", type:"team" },
-  { key:"decepcion",  label:"Equipo decepción",    type:"team" },
+  { key:"fairplay",   label:"Equipo Fair Play",    type:"team" },
 ];
 
 function AdminSpecials() {

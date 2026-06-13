@@ -287,7 +287,7 @@
     // Sólo los picks: el read-back trae awarded/playerId/updatedAt y las reglas
     // rechazan cualquier escritura del dueño que toque `awarded`. Se filtra acá.
     const keys = window.ProdeSpecials?.SPECIAL_KEYS
-      || ["campeon", "subcampeon", "goleador", "arquero", "sorpresa", "decepcion"];
+      || ["campeon", "subcampeon", "goleador", "arquero", "sorpresa", "fairplay"];
     const merged = { ...getSpecials(), ...specials };
     const payload = { updatedAt: new Date().toISOString() };
     for (const k of keys) if (merged[k] !== undefined) payload[k] = merged[k];

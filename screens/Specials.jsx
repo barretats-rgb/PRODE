@@ -110,8 +110,8 @@ function Specials({ go }) {
           {teamPick("sorpresa")}
         </SpecialRow>
 
-        <SpecialRow icon="frown" tone="coral" label="Equipo decepción" sub="Se va antes de tiempo" current={sp.decepcion} result={resultFor("decepcion")}>
-          {teamPick("decepcion")}
+        <SpecialRow icon="heart-handshake" tone="sage" label="Equipo Fair Play" sub="El más limpio del torneo" current={sp.fairplay} result={resultFor("fairplay")}>
+          {teamPick("fairplay")}
         </SpecialRow>
       </div>
 
