@@ -9,6 +9,13 @@ function Landing({ go }) {
     window.addEventListener("prode:data", onData);
     return () => window.removeEventListener("prode:data", onData);
   }, []);
+  // ¿El jugador ya tiene su prode? (perfil completo = equipo favorito elegido).
+  // Si lo tiene, el CTA lleva a sus predicciones en vez del asistente de "crear".
+  const hasProde = !!window.ProdeDB?.getPlayer?.()?.favoriteTeam;
+  const ctaLabel = hasProde ? "Ir a mi prode" : "Crear mi prode";
+  const ctaIcon = hasProde ? "goal" : "zap";
+  const ctaGo = () => go(hasProde ? "matches" : "register");
+
   const matches = window.ProdeStore?.getMatches?.() || window.MATCHES;
   const live = matches.find(m => m.status === "vivo");
   // Próximo partido real para la cuenta regresiva: el más cercano que todavía no empezó.
@@ -73,7 +80,7 @@ function Landing({ go }) {
           </p>
 
           <div style={{display:"flex", gap:8, marginTop:22, flexWrap:"wrap"}}>
-            <Btn variant="accent" size="lg" onClick={()=>go("register")} icon="zap">Crear mi prode</Btn>
+            <Btn variant="accent" size="lg" onClick={ctaGo} icon={ctaIcon}>{ctaLabel}</Btn>
             <Btn variant="ghost" size="lg" onClick={()=>go("ranking")} icon="trophy">Ranking</Btn>
           </div>
         </div>
@@ -194,8 +201,8 @@ function Landing({ go }) {
 
       {/* CTA final */}
       <div style={{padding:"20px 16px 0"}}>
-        <Btn full variant="accent" size="lg" onClick={()=>go("register")} icon="zap">
-          Arrancá tu prode
+        <Btn full variant="accent" size="lg" onClick={ctaGo} icon={ctaIcon}>
+          {hasProde ? "Ir a mi prode" : "Arrancá tu prode"}
         </Btn>
         <div style={{
           textAlign:"center", marginTop:10, fontSize:11, color:"var(--char-400)",
