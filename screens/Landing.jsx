@@ -171,6 +171,20 @@ function Landing({ go }) {
           <PointCard pts="+1" label="Diferencia de gol" sub="Punto extra" tone="sage"/>
           <PointCard pts="★" label="Especiales" sub="Campeón, goleador..." tone="cream"/>
         </div>
+
+        {/* Aclaración fase de eliminación */}
+        <div style={{
+          marginTop:10, padding:"12px 14px", borderRadius:14,
+          background:"var(--char-800)", border:"1px solid var(--char-700)",
+          display:"flex", alignItems:"flex-start", gap:10,
+        }}>
+          <i data-lucide="info" style={{width:16, height:16, color:"var(--neon-citrus)", flexShrink:0, marginTop:1}}></i>
+          <div style={{fontSize:12, color:"var(--char-200)", lineHeight:1.5}}>
+            <span style={{color:"var(--cream-100)", fontWeight:700}}>En eliminación</span> cuenta el resultado
+            al final del alargue. Los penales no cuentan, así que el <span style={{color:"var(--neon-citrus)", fontWeight:700}}>empate
+            es un resultado válido</span> (si se define por penales, vale el empate).
+          </div>
+        </div>
       </div>
 
       {/* PREMIOS */}

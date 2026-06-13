@@ -185,6 +185,17 @@ function Admin({ go }) {
             textTransform:"uppercase", letterSpacing:"0.02em", margin:"4px 0 14px",
           }}>Carga manual</h3>
           <div style={{
+            padding:"10px 13px", borderRadius:14, marginBottom:12,
+            background:"var(--char-800)", border:"1px solid var(--orange-500)",
+            display:"flex", alignItems:"flex-start", gap:10,
+          }}>
+            <i data-lucide="alert-triangle" style={{width:15, height:15, color:"var(--orange-400)", flexShrink:0, marginTop:1}}></i>
+            <div style={{fontSize:11, color:"var(--char-200)", lineHeight:1.5}}>
+              En eliminación cargá el marcador <span style={{color:"var(--cream-100)", fontWeight:700}}>al final del alargue</span>,
+              nunca el ganador de los penales. Si se definió por penales, va el <span style={{color:"var(--neon-citrus)", fontWeight:700}}>empate</span>.
+            </div>
+          </div>
+          <div style={{
             borderRadius:18, overflow:"hidden",
             background:"var(--char-800)", border:"1px solid var(--char-700)",
           }}>
