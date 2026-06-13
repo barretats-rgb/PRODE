@@ -378,7 +378,7 @@ function AdminSpecials() {
                 : <Pill tone="open">Sin confirmar</Pill>}
             </div>
             {def.type === "team" ? (
-              <div style={{display:"flex", gap:6, overflowX:"auto", padding:"2px 0 6px", scrollbarWidth:"none"}}>
+              <div style={{display:"flex", gap:6, flexWrap:"wrap", padding:"2px 0 6px"}}>
                 {SPECIAL_TEAM_OPTS.map((c) => {
                   const on = draft === c;
                   return (
@@ -397,16 +397,22 @@ function AdminSpecials() {
             ) : (
               <div>
                 <div style={{display:"flex", gap:6, flexWrap:"wrap", marginBottom:8}}>
-                  {def.options.map((n) => {
-                    const on = draft === n;
+                  {(def.options || []).map((opt) => {
+                    const name = typeof opt === "string" ? opt : opt.name;
+                    const team = typeof opt === "string" ? null : opt.team;
+                    const on = draft === name;
                     return (
-                      <button key={n} onClick={()=>setDraft(def.key, n)} style={{
-                        padding:"6px 11px", borderRadius:999, cursor:"pointer",
+                      <button key={name} onClick={()=>setDraft(def.key, name)} style={{
+                        display:"inline-flex", alignItems:"center", gap:6,
+                        padding:"5px 11px 5px 6px", borderRadius:999, cursor:"pointer",
                         border:`1px solid ${on ? "var(--neon-citrus)" : "var(--char-600)"}`,
                         background: on ? "var(--neon-citrus)" : "transparent",
                         color: on ? "var(--char-900)" : "var(--cream-100)",
                         fontSize:10, fontWeight:600, fontFamily:"var(--font-body)",
-                      }}>{n}</button>
+                      }}>
+                        {team && <Flag code={team} size={16}/>}
+                        {name}
+                      </button>
                     );
                   })}
                 </div>

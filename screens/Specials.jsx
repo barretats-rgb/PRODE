@@ -48,7 +48,7 @@ function Specials({ go }) {
   const teamPick = (key) => {
     const opts = window.SPECIAL_TEAMS || ["ARG","BRA","FRA","ESP","ENG","POR","GER","NED","MAR","URU","COL","CRO","BEL","JPN","USA","MEX"];
     return (
-      <div style={{display:"flex", gap:8, overflowX:"auto", padding:"8px 16px 4px", marginLeft:-16, marginRight:-16, scrollbarWidth:"none"}}>
+      <div style={{display:"flex", gap:8, flexWrap:"wrap", padding:"8px 0 4px"}}>
         {opts.map(c => {
           const on = sp[key] === c;
           return (
@@ -216,24 +216,41 @@ function SpecialRow({ icon, tone, label, sub, current, result, children }) {
 }
 
 function ScorerPick({ value, onChange, options, disabled }) {
-  const list = options || [
-    "Kylian Mbappé", "Lionel Messi", "Lautaro Martínez", "Erling Haaland",
-    "Vinícius Jr.", "Harry Kane", "Julián Álvarez", "Pedri",
-  ];
+  const list = options || window.SPECIAL_SCORERS || [];
   return (
     <div style={{display:"flex", gap:7, flexWrap:"wrap", padding:"4px 0 0"}}>
-      {list.map(n => {
-        const on = value === n;
+      {list.map(opt => {
+        const name = typeof opt === "string" ? opt : opt.name;
+        const team = typeof opt === "string" ? null : opt.team;
+        const on = value === name;
         return (
-          <button key={n} disabled={disabled} onClick={()=>{ if (!disabled) onChange(n); }} style={{
+          <button key={name} disabled={disabled} onClick={()=>{ if (!disabled) onChange(name); }} style={{
+            position:"relative", overflow:"hidden",
             padding:"7px 12px", borderRadius:999,
-            border:`1px solid ${on ? "var(--neon-citrus)" : "var(--char-600)"}`,
-            background: on ? "var(--neon-citrus)" : "transparent",
-            color: on ? "var(--char-900)" : "var(--cream-100)",
-            fontSize:11, fontWeight:600, cursor: disabled ? "not-allowed" : "pointer",
+            border:`1.5px solid ${on ? "var(--neon-citrus)" : "var(--char-600)"}`,
+            background:"var(--char-900)",
+            cursor: disabled ? "not-allowed" : "pointer",
             opacity: disabled && !on ? 0.45 : 1,
-            letterSpacing:"0.02em", fontFamily:"var(--font-body)",
-          }}>{n}</button>
+          }}>
+            {team && (
+              <span style={{
+                position:"absolute", inset:0,
+                backgroundImage:`url(${window.FLAG(team)})`,
+                backgroundSize:"cover", backgroundPosition:"center",
+                opacity: on ? 0.5 : 0.3,
+              }}/>
+            )}
+            <span style={{
+              position:"absolute", inset:0,
+              background: on ? "rgba(232,242,106,0.28)" : "rgba(18,17,15,0.5)",
+            }}/>
+            <span style={{
+              position:"relative", zIndex:1,
+              fontSize:11, fontWeight:700, letterSpacing:"0.02em",
+              color:"var(--cream-50)", fontFamily:"var(--font-body)",
+              textShadow:"0 1px 3px rgba(0,0,0,0.85)",
+            }}>{name}</span>
+          </button>
         );
       })}
     </div>

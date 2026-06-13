@@ -274,22 +274,43 @@ window.SPECIAL_TEAMS = (function () {
   return [...primero, ...resto];
 })();
 
-// Candidatos a goleador (Bota de Oro) — figuras del torneo.
-window.SPECIAL_SCORERS = [
-  "Kylian Mbappé", "Erling Haaland", "Harry Kane", "Lautaro Martínez", "Julián Álvarez",
-  "Lionel Messi", "Vinícius Jr.", "Rodrygo", "Raphinha", "Lamine Yamal",
-  "Álvaro Morata", "Cristiano Ronaldo", "Rafael Leão", "Victor Osimhen", "Mohamed Salah",
-  "Romelu Lukaku", "Kevin De Bruyne", "Memphis Depay", "Cody Gakpo", "Jude Bellingham",
-  "Bukayo Saka", "Florian Wirtz", "Jamal Musiala", "Dušan Vlahović", "Christian Pulisic",
-  "Hirving Lozano",
-];
+// Filtra una lista de { name, team } a las selecciones que realmente juegan el torneo.
+function specialsByFixture(list) {
+  const enFixture = new Set();
+  (window.MATCHES || []).forEach((m) => { enFixture.add(m.a); enFixture.add(m.b); });
+  return list.filter((p) => enFixture.has(p.team));
+}
+
+// Candidatos a goleador (Bota de Oro) — figuras del torneo, con su selección
+// (la bandera se muestra de fondo en el chip). Sólo entran las que clasificaron.
+window.SPECIAL_SCORERS = specialsByFixture([
+  { name:"Kylian Mbappé",    team:"FRA" }, { name:"Erling Haaland",   team:"NOR" },
+  { name:"Harry Kane",       team:"ENG" }, { name:"Jude Bellingham",  team:"ENG" },
+  { name:"Bukayo Saka",      team:"ENG" }, { name:"Lautaro Martínez", team:"ARG" },
+  { name:"Julián Álvarez",   team:"ARG" }, { name:"Lionel Messi",     team:"ARG" },
+  { name:"Vinícius Jr.",     team:"BRA" }, { name:"Rodrygo",          team:"BRA" },
+  { name:"Raphinha",         team:"BRA" }, { name:"Lamine Yamal",     team:"ESP" },
+  { name:"Álvaro Morata",    team:"ESP" }, { name:"Cristiano Ronaldo",team:"POR" },
+  { name:"Rafael Leão",      team:"POR" }, { name:"Mohamed Salah",    team:"EGY" },
+  { name:"Romelu Lukaku",    team:"BEL" }, { name:"Kevin De Bruyne",  team:"BEL" },
+  { name:"Memphis Depay",    team:"NED" }, { name:"Cody Gakpo",       team:"NED" },
+  { name:"Florian Wirtz",    team:"GER" }, { name:"Jamal Musiala",    team:"GER" },
+  { name:"Kai Havertz",      team:"GER" }, { name:"Christian Pulisic",team:"USA" },
+  { name:"Hirving Lozano",   team:"MEX" }, { name:"Darwin Núñez",     team:"URU" },
+  { name:"Luis Díaz",        team:"COL" }, { name:"Youssef En-Nesyri",team:"MAR" },
+  { name:"Takefusa Kubo",    team:"JPN" },
+]);
 
 // Candidatos a mejor arquero (Guante de Oro).
-window.SPECIAL_KEEPERS = [
-  "Emiliano Martínez", "Thibaut Courtois", "Mike Maignan", "Unai Simón", "Alisson",
-  "Ederson", "Yann Sommer", "Jordan Pickford", "Marc-André ter Stegen", "Diogo Costa",
-  "Gianluigi Donnarumma", "Yassine Bounou", "Guillermo Ochoa",
-];
+window.SPECIAL_KEEPERS = specialsByFixture([
+  { name:"Emiliano Martínez",    team:"ARG" }, { name:"Thibaut Courtois", team:"BEL" },
+  { name:"Mike Maignan",         team:"FRA" }, { name:"Unai Simón",       team:"ESP" },
+  { name:"Alisson",              team:"BRA" }, { name:"Ederson",          team:"BRA" },
+  { name:"Yann Sommer",          team:"SUI" }, { name:"Jordan Pickford",  team:"ENG" },
+  { name:"Marc-André ter Stegen",team:"GER" }, { name:"Diogo Costa",      team:"POR" },
+  { name:"Yassine Bounou",       team:"MAR" }, { name:"Guillermo Ochoa",  team:"MEX" },
+  { name:"Matt Turner",          team:"USA" },
+]);
 
 // Predicciones especiales del usuario: SIN demo. Arrancan vacías; los picks
 // reales viven en specialPredictions/{uid} (read-back en firebase-service).
