@@ -4,10 +4,12 @@
 
 function Register({ go }) {
   const savedPlayer = window.ProdeStore?.getPlayer?.() || {};
+  // Solo selecciones que juegan el Mundial (derivadas de la fixture), candidatas primero.
+  const teamOpts = window.SPECIAL_TEAMS || ["ARG","BRA","FRA","ESP","ENG","POR","GER","NED","URU","COL","MEX","USA"];
   const [step, setStep] = useState(0);
   const [name, setName] = useState(savedPlayer.name || window.ProdeDB?.getUser?.()?.displayName || "");
   const [phone, setPhone] = useState(savedPlayer.phone || "");
-  const [team, setTeam] = useState(savedPlayer.favoriteTeam || "CRC");
+  const [team, setTeam] = useState(savedPlayer.favoriteTeam || teamOpts[0]);
   const [avatar, setAvatar] = useState(2);
   const [mode, setMode] = useState(savedPlayer.mode || "solo"); // solo | create | join
   const [groupName, setGroupName] = useState(savedPlayer.groupName || "La Mesa del Imperial");
@@ -15,7 +17,6 @@ function Register({ go }) {
   const [saveError, setSaveError] = useState("");
 
   const avatars = ["orange","citrus","sage","tan","olive","char"];
-  const favs = ["ARG","CRC","BRA","URU","MEX","COL","ESP","FRA","ENG","USA","GER","ITA"];
   const initials = name.split(" ").map(w=>w[0]).slice(0,2).join("") || "??";
 
   const finishRegistration = async () => {
@@ -98,7 +99,7 @@ function Register({ go }) {
           }}>¿Por quién la vas<br/>a remar?</h2>
 
           <div style={{display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10}}>
-            {favs.map(code => {
+            {teamOpts.map(code => {
               const on = team === code;
               return (
                 <button key={code} onClick={()=>setTeam(code)} style={{
