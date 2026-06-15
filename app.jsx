@@ -73,7 +73,8 @@ function App() {
   const isDesktop = useIsDesktop();
   // Estado de sesión: undefined = cargando, null = sin sesión, objeto = sesión activa.
   const [auth, setAuth] = useState(undefined);
-  const [playerCount, setPlayerCount] = useState(null);
+  const [players, setPlayers] = useState(null); // misma fuente que el ranking → conteos consistentes
+  const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
     window.ProdeDB?.init();
@@ -81,12 +82,21 @@ function App() {
     return () => unsub && unsub();
   }, []);
 
-  // Conteo real de jugadores (sólo con sesión, porque players requiere estar logueado).
+  // Jugadores en vivo (sólo con sesión): da el total y, con lastSeen, los que están en línea.
   useEffect(() => {
     if (!auth?.user) return;
-    const unsub = window.ProdeDB?.subscribePlayerCount?.(setPlayerCount);
+    const unsub = window.ProdeDB?.subscribeRanking?.((list) => setPlayers(list));
     return () => unsub && unsub();
   }, [auth?.user?.uid]);
+
+  // Tick para refrescar el "en línea" aunque no lleguen snapshots nuevos.
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 30000);
+    return () => clearInterval(t);
+  }, []);
+
+  const playerCount = players == null ? null : players.length;
+  const onlineCount = (players || []).filter(p => window.ProdeRanking?.isOnline?.(p.lastSeen, now)).length;
 
   // Presencia: latido cada 60s mientras la app está abierta y visible (punto verde).
   useEffect(() => {
@@ -153,7 +163,11 @@ function App() {
           <div style={{fontFamily:"var(--font-title)",fontSize:18,color:"var(--cream-100)",textTransform:"uppercase",marginTop:5}}>
             {playerCount == null ? "—" : playerCount} {playerCount === 1 ? "jugador" : "jugadores"}
           </div>
-          <div style={{fontSize:11,color:"var(--char-400)",marginTop:4}}>Modo manual: resultados cargados desde Admin.</div>
+          <div style={{fontSize:11,color:"var(--char-300)",marginTop:5,display:"flex",alignItems:"center",gap:7}}>
+            <span style={{width:8,height:8,borderRadius:"50%",background:"#34d399",boxShadow:"0 0 6px rgba(52,211,153,0.7)",flexShrink:0}}/>
+            {onlineCount} en línea
+          </div>
+          <div style={{fontSize:11,color:"var(--char-400)",marginTop:5}}>Modo manual: resultados cargados desde Admin.</div>
         </div>
       </aside>
 

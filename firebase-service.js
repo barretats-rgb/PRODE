@@ -221,7 +221,7 @@
 
   async function loadRanking() {
     if (!state.ready) return window.RANKING || [];
-    const snap = await collection("players").orderBy("points", "desc").limit(50).get();
+    const snap = await collection("players").orderBy("points", "desc").limit(500).get();
     return snap.docs.map((doc, index) => ({ id: doc.id, rank: index + 1, ...doc.data() }));
   }
 
@@ -241,7 +241,7 @@
   }
 
   // Ranking en vivo: players ordenados por puntos. cb recibe el array de players. Devuelve unsub.
-  function subscribeRanking(cb, max = 50) {
+  function subscribeRanking(cb, max = 500) {
     if (!state.ready) { cb([]); return () => {}; }
     return collection("players").orderBy("points", "desc").limit(max).onSnapshot((snap) => {
       cb(snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
