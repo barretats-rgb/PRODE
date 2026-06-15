@@ -162,6 +162,52 @@
     return state.auth.signInWithPopup(provider);
   }
 
+  // Traduce errores comunes de Firebase Auth a mensajes para el jugador.
+  function authErrorMessage(code, fallback) {
+    const map = {
+      "auth/email-already-in-use": "Ese usuario ya existe.",
+      "auth/weak-password": "La contraseña necesita al menos 6 caracteres.",
+      "auth/wrong-password": "Usuario o contraseña incorrectos.",
+      "auth/user-not-found": "Usuario o contraseña incorrectos.",
+      "auth/invalid-credential": "Usuario o contraseña incorrectos.",
+      "auth/operation-not-allowed": "El ingreso con usuario no está habilitado todavía.",
+    };
+    return map[code] || fallback;
+  }
+
+  // Crea una cuenta nueva con usuario + contraseña (email sintético interno).
+  async function signUpWithUsername(usuario, pass) {
+    if (!state.ready) await init();
+    if (!state.auth) throw new Error("Firebase no está configurado.");
+    const v = window.ProdeAuthUsername.validateSignup(usuario, pass, pass);
+    if (!v.ok) throw new Error(v.error);
+    const email = window.ProdeAuthUsername.usernameToEmail(usuario);
+    try {
+      const cred = await state.auth.createUserWithEmailAndPassword(email, pass);
+      // Guardar el usuario tal cual lo tipeó, para mostrarlo (ensurePlayer lo usa como name).
+      if (cred.user && cred.user.updateProfile) {
+        try { await cred.user.updateProfile({ displayName: String(usuario).trim() }); } catch (e) { /* no crítico */ }
+      }
+      return { ok: true };
+    } catch (e) {
+      throw new Error(authErrorMessage(e && e.code, "No se pudo crear la cuenta. Probá de nuevo."));
+    }
+  }
+
+  // Entra con usuario + contraseña.
+  async function signInWithUsername(usuario, pass) {
+    if (!state.ready) await init();
+    if (!state.auth) throw new Error("Firebase no está configurado.");
+    const email = window.ProdeAuthUsername.usernameToEmail(usuario);
+    if (!email) throw new Error("Usuario o contraseña incorrectos.");
+    try {
+      await state.auth.signInWithEmailAndPassword(email, pass);
+      return { ok: true };
+    } catch (e) {
+      throw new Error(authErrorMessage(e && e.code, "No se pudo entrar. Probá de nuevo."));
+    }
+  }
+
   async function signOutUser() {
     if (state.auth) await state.auth.signOut();
   }
@@ -424,6 +470,8 @@
     init,
     onAuthChange,
     signInWithGoogle,
+    signUpWithUsername,
+    signInWithUsername,
     signOutUser,
     isAdmin,
     isReady: () => state.ready,
