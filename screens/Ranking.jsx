@@ -5,6 +5,7 @@
 function Ranking({ go }) {
   const [highlight, setHighlight] = useState(null);
   const [players, setPlayers] = useState(null);
+  const [showAll, setShowAll] = useState(false); // top 10 por defecto, o ranking completo
 
   useEffect(() => {
     // Ranking general en vivo desde Firestore (players orderBy points).
@@ -145,9 +146,17 @@ function Ranking({ go }) {
             <Eyebrow color="var(--char-500)" style={{fontSize:8, textAlign:"center"}}>Win</Eyebrow>
             <Eyebrow color="var(--char-500)" style={{fontSize:8, textAlign:"right"}}>Pts</Eyebrow>
           </div>
-          {rest.map((r) => (
+          {(showAll ? rest : rest.slice(0, 7)).map((r) => (
             <RankRow key={r.rank} r={r} expanded={highlight===r.rank} onClick={()=>setHighlight(highlight===r.rank?null:r.rank)}/>
           ))}
+          {rows.length > 10 && (
+            <button onClick={()=>setShowAll(v=>!v)} style={{
+              width:"100%", marginTop:10, padding:"12px", borderRadius:12, cursor:"pointer",
+              background:"transparent", border:"1px solid var(--char-600)", color:"var(--neon-citrus)",
+              fontSize:11, fontWeight:700, letterSpacing:"0.12em", textTransform:"uppercase",
+              fontFamily:"var(--font-body)",
+            }}>{showAll ? "Ver menos" : `Ver ranking completo · ${rows.length}`}</button>
+          )}
         </div>
       )}
 
