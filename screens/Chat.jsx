@@ -10,6 +10,7 @@ function Chat({ go }) {
   const [sending, setSending] = useState(false);
   const listRef = useRef(null);
   const lastSentRef = useRef(0);
+  const didInitialScroll = useRef(false);
 
   const myUid = window.ProdeDB?.getUser?.()?.uid;
   const isAdmin = !!window.ProdeDB?.isAdmin?.();
@@ -19,10 +20,19 @@ function Chat({ go }) {
     return () => unsub && unsub();
   }, []);
 
-  // Auto-scroll al último mensaje cuando llegan nuevos.
+  // Auto-scroll al último mensaje: siempre en la primera carga; después sólo si
+  // ya estabas cerca del fondo (para no arrastrarte si leés historial).
+  // Además re-renderiza los íconos nuevos (tacho de admin) que llegan async.
   useEffect(() => {
     const el = listRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (el && messages) {
+      const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+      if (!didInitialScroll.current || nearBottom) {
+        el.scrollTop = el.scrollHeight;
+        if (messages.length) didInitialScroll.current = true;
+      }
+    }
+    if (window.lucide) window.lucide.createIcons();
   }, [messages]);
 
   const send = async () => {
