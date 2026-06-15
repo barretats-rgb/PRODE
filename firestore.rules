@@ -106,6 +106,22 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ---- messages: chat global de la barra ----
+    // Sólo escribís TU propio mensaje, con texto válido, y SÓLO si tenés doc de
+    // jugador (expulsado = sin players/{uid} → no puede escribir). Admin borra.
+    match /messages/{id} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid
+        && exists(/databases/$(database)/documents/players/$(request.auth.uid))
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 500
+        && request.resource.data.keys().hasOnly(['uid','name','avatarTone','text','createdAt']);
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+
     // Todo lo no declarado (p.ej. groups/groupMembers) queda denegado por defecto.
   }
 }

@@ -7,7 +7,7 @@ const SCREENS = {
   ranking:  { label:"Ranking",      comp:"Ranking",  tab:"ranking" },
   specials: { label:"Especiales",   comp:"Specials", tab:"matches" },
   profile:  { label:"Perfil",       comp:"Profile",  tab:"profile" },
-  groups:   { label:"Grupos",       comp:"Groups",   tab:"groups"  },
+  chat:     { label:"Chat",         comp:"Chat",     tab:"chat"    },
   admin:    { label:"Admin",        comp:"Admin",    tab:"admin"   },
 };
 
@@ -21,7 +21,7 @@ const NAV_ITEMS = [
   { screen:"home",    label:"Home",    icon:"home" },
   { screen:"matches", label:"Prode",   icon:"goal" },
   { screen:"ranking", label:"Ranking", icon:"trophy" },
-  { screen:"groups",  label:"Grupos",  icon:"users" },
+  { screen:"chat",    label:"Chat",    icon:"message-circle" },
   { screen:"profile", label:"Yo",      icon:"user" },
   { screen:"admin",   label:"Admin",   icon:"settings", admin:true },
 ];

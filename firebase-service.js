@@ -336,6 +336,39 @@
     } catch (e) { /* sin sesión / sin permisos: ignorar */ }
   }
 
+  // Chat global en vivo: últimos `max` mensajes (orden cronológico). Devuelve unsub.
+  function subscribeMessages(cb, max = 50) {
+    if (!state.ready) { cb([]); return () => {}; }
+    return collection("messages").orderBy("createdAt", "desc").limit(max).onSnapshot((snap) => {
+      const list = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      list.reverse(); // viejo → nuevo para la UI
+      cb(list);
+    }, (e) => console.error("[Prode Refugio] messages snapshot", e));
+  }
+
+  // Envía un mensaje del jugador actual al chat. Valida y sanea el texto.
+  async function sendMessage(text) {
+    const id = currentPlayerId();
+    if (!state.ready || !id) return { ok: false };
+    const v = window.ProdeChat ? window.ProdeChat.validMessage(text) : { ok: false };
+    if (!v.ok) return { ok: false };
+    const p = state.player || {};
+    await collection("messages").add({
+      uid: id,
+      name: p.name || "Jugador",
+      avatarTone: p.avatarTone || "olive",
+      text: v.text,
+      createdAt: firestoreNow(),
+    });
+    return { ok: true };
+  }
+
+  // Borra un mensaje (moderación). Requiere ser admin (lo exigen las reglas).
+  async function deleteMessage(messageId) {
+    if (!state.ready || !messageId) return;
+    await collection("messages").doc(messageId).delete();
+  }
+
   // Datos privados (teléfono/email) de todos los jugadores. SOLO admin (las reglas
   // lo exigen). cb recibe un mapa { uid: { phone, email } }. Devuelve unsub.
   function subscribePlayersPrivate(cb) {
@@ -413,5 +446,8 @@
     expelPlayer,
     subscribeSpecialResults,
     confirmSpecialResult,
+    subscribeMessages,
+    sendMessage,
+    deleteMessage,
   };
 })();
