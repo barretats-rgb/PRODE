@@ -326,6 +326,16 @@
     return { ok: true };
   }
 
+  // Presencia: marca al jugador como activo (latido). Escribe lastSeen con la hora
+  // del servidor en su propio doc. Silencioso (no rompe nada si falla).
+  async function touchPresence() {
+    const id = currentPlayerId();
+    if (!state.ready || !id) return;
+    try {
+      await collection("players").doc(id).set({ lastSeen: firestoreNow() }, { merge: true });
+    } catch (e) { /* sin sesión / sin permisos: ignorar */ }
+  }
+
   // Datos privados (teléfono/email) de todos los jugadores. SOLO admin (las reglas
   // lo exigen). cb recibe un mapa { uid: { phone, email } }. Devuelve unsub.
   function subscribePlayersPrivate(cb) {
@@ -398,6 +408,7 @@
     subscribeRanking,
     subscribePlayerCount,
     subscribePlayersPrivate,
+    touchPresence,
     finalizeMatch,
     expelPlayer,
     subscribeSpecialResults,

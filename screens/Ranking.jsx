@@ -19,8 +19,14 @@ function Ranking({ go }) {
     ? window.ProdeWeekly.weeklyHistory(players, window.ProdeWeekly.currentWeekId())
         .flatMap((h) => h.leaders.map((l) => l.id))
     : [];
+  // Presencia: uids con latido reciente (punto verde).
+  const nowMs = Date.now();
+  const onlineIds = new Set((players || [])
+    .filter((p) => window.ProdeRanking?.isOnline?.(p.lastSeen, nowMs))
+    .map((p) => p.id));
   const rows = (players && window.ProdeRanking)
     ? window.ProdeRanking.rankingRowsFromPlayers(players, myUid, reyIds)
+        .map((r) => ({ ...r, online: onlineIds.has(r.id) }))
     : [];                                       // sin datos reales: vacío (nada de demo)
   const you = rows.find(r => r.you);
   const podium = rows.slice(0, 3);
@@ -109,7 +115,7 @@ function Ranking({ go }) {
               display:"flex", alignItems:"center", justifyContent:"center",
               fontFamily:"var(--font-title)", fontSize:16,
             }}>{you.rank}°</div>
-            <Avatar initials={you.avatar} size={36} tone="citrus"/>
+            <Avatar initials={you.avatar} size={36} tone="citrus" online={you.online}/>
             <div style={{flex:1}}>
               <div style={{fontSize:9, letterSpacing:"0.2em", color:"var(--neon-citrus)", fontWeight:700}}>SOS VOS</div>
               <div style={{
@@ -194,7 +200,7 @@ function PodiumCol({ player, pos, h, tone }) {
   };
   return (
     <div style={{textAlign:"center"}}>
-      <Avatar initials={player.avatar} size={pos===1?56:46} tone={tone==="citrus"?"citrus":tone==="orange"?"orange":"char"} ring/>
+      <Avatar initials={player.avatar} size={pos===1?56:46} tone={tone==="citrus"?"citrus":tone==="orange"?"orange":"char"} ring online={player.online}/>
       <div style={{
         fontFamily:"var(--font-title)", fontSize:11, color:"var(--cream-100)",
         textTransform:"uppercase", letterSpacing:"0.02em", marginTop:7, lineHeight:1.1,
@@ -241,7 +247,7 @@ function RankRow({ r, expanded, onClick }) {
           letterSpacing:"0.02em",
         }}>{r.rank}°</div>
         <div style={{display:"flex", alignItems:"center", gap:9, minWidth:0}}>
-          <Avatar initials={r.avatar} size={28} tone={r.you?"citrus":(r.rank%3===0?"orange":r.rank%2===0?"sage":"olive")}/>
+          <Avatar initials={r.avatar} size={28} tone={r.you?"citrus":(r.rank%3===0?"orange":r.rank%2===0?"sage":"olive")} online={r.online}/>
           <div style={{minWidth:0, flex:1}}>
             <div style={{
               fontFamily:"var(--font-body)", fontSize:12, color:"var(--cream-100)",

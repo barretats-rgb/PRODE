@@ -260,13 +260,16 @@ function Admin({ go }) {
             </div>
           )}
           <div style={{display:"flex", flexDirection:"column", gap:8}}>
-            {(window.ProdeRanking?.rankingRowsFromPlayers?.(players, myUid) || []).map((r) => (
+            {(window.ProdeRanking?.rankingRowsFromPlayers?.(players, myUid) || []).map((r) => {
+              const online = window.ProdeRanking?.isOnline?.(
+                (players.find((p) => p.id === r.id) || {}).lastSeen, Date.now());
+              return (
               <div key={r.id} style={{
                 display:"flex", alignItems:"center", gap:11,
                 padding:"10px 13px", borderRadius:16,
                 background:"var(--char-800)", border:"1px solid var(--char-700)",
               }}>
-                <Avatar initials={r.avatar} size={30} tone={r.you ? "citrus" : "olive"}/>
+                <Avatar initials={r.avatar} size={30} tone={r.you ? "citrus" : "olive"} online={online}/>
                 <div style={{flex:1, minWidth:0}}>
                   <div style={{fontFamily:"var(--font-body)", fontSize:13, color:"var(--cream-100)", fontWeight:600,
                     whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis"}}>{r.name}</div>
@@ -295,7 +298,8 @@ function Admin({ go }) {
                   <Btn size="sm" variant="ghost" onClick={()=>setConfirmExpel(r.id)}>Expulsar</Btn>
                 )}
               </div>
-            ))}
+              );
+            })}
           </div>
           <div style={{marginTop:12, fontSize:10, color:"var(--char-500)", letterSpacing:"0.04em", lineHeight:1.5}}>
             Expulsar borra al jugador y todas sus predicciones. No se puede deshacer.

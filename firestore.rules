@@ -51,7 +51,7 @@ service cloud.firestore {
         || (isOwner(uid)
             && request.resource.data.diff(resource.data).affectedKeys()
                  .hasOnly(['name','photoURL','favoriteTeam',
-                           'avatarTone','avatar','mode','groupName','groupCode','updatedAt']));
+                           'avatarTone','avatar','mode','groupName','groupCode','updatedAt','lastSeen']));
       allow delete: if isAdmin();
     }
 

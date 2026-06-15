@@ -88,6 +88,16 @@ function App() {
     return () => unsub && unsub();
   }, [auth?.user?.uid]);
 
+  // Presencia: latido cada 60s mientras la app está abierta y visible (punto verde).
+  useEffect(() => {
+    if (!auth?.user) return;
+    const beat = () => { if (!document.hidden) window.ProdeDB?.touchPresence?.(); };
+    beat();
+    const t = setInterval(beat, 60000);
+    document.addEventListener("visibilitychange", beat);
+    return () => { clearInterval(t); document.removeEventListener("visibilitychange", beat); };
+  }, [auth?.user?.uid]);
+
   useEffect(() => {
     if (window.lucide) window.lucide.createIcons();
   }, [screen, tweaks, isDesktop, auth]);
@@ -356,13 +366,16 @@ function DesktopAdmin() {
               borderRadius:14, overflow:"hidden", background:"var(--char-800)",
               border:"1px solid var(--char-700)",
             }}>
-              {(window.ProdeRanking?.rankingRowsFromPlayers?.(players, myUid) || []).map((r, i, arr) => (
+              {(window.ProdeRanking?.rankingRowsFromPlayers?.(players, myUid) || []).map((r, i, arr) => {
+                const online = window.ProdeRanking?.isOnline?.(
+                  (players.find((p) => p.id === r.id) || {}).lastSeen, Date.now());
+                return (
                 <div key={r.id} style={{
                   padding:"12px 16px", borderBottom: i < arr.length - 1 ? "1px solid var(--char-700)" : 0,
                   display:"flex", alignItems:"center", gap:14,
                 }}>
                   <span style={{width:24, fontFamily:"var(--font-title)", fontSize:13, color:"var(--char-400)"}}>{r.rank}</span>
-                  <Avatar initials={r.avatar} size={32} tone={r.you ? "citrus" : "olive"}/>
+                  <Avatar initials={r.avatar} size={32} tone={r.you ? "citrus" : "olive"} online={online}/>
                   <div style={{flex:1, minWidth:0}}>
                     <div style={{display:"flex", alignItems:"center", gap:8}}>
                       <span style={{color:"var(--cream-100)", fontWeight:600, fontSize:13,
@@ -393,7 +406,8 @@ function DesktopAdmin() {
                     )}
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

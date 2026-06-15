@@ -152,7 +152,7 @@ function TabBar({ active, onChange }) {
 }
 
 /* ---------- Avatar (initials disc) ---------- */
-function Avatar({ initials, size = 36, tone = "olive", ring = false, you = false }) {
+function Avatar({ initials, size = 36, tone = "olive", ring = false, you = false, online = false }) {
   const tones = {
     olive:  { bg:"var(--olive-500)",  fg:"var(--cream-50)" },
     orange: { bg:"var(--orange-500)", fg:"var(--cream-50)" },
@@ -162,7 +162,7 @@ function Avatar({ initials, size = 36, tone = "olive", ring = false, you = false
     char:   { bg:"var(--char-700)",   fg:"var(--cream-100)" },
   };
   const t = tones[tone] || tones.olive;
-  return (
+  const disc = (
     <div style={{
       width:size, height:size, borderRadius:"50%",
       background:t.bg, color:t.fg,
@@ -173,6 +173,20 @@ function Avatar({ initials, size = 36, tone = "olive", ring = false, you = false
                      : (ring ? "0 0 0 2px var(--cream-100), 0 0 0 3px var(--char-700)" : "none"),
       flexShrink:0,
     }}>{initials}</div>
+  );
+  if (!online) return disc;
+  // Punto verde de "online" en la esquina inferior derecha.
+  const dot = Math.max(8, Math.round(size * 0.3));
+  return (
+    <div style={{position:"relative", width:size, height:size, flexShrink:0}}>
+      {disc}
+      <span title="En línea" style={{
+        position:"absolute", right:-1, bottom:-1,
+        width:dot, height:dot, borderRadius:"50%",
+        background:"#34d399", border:"2px solid var(--char-900)",
+        boxShadow:"0 0 6px rgba(52,211,153,0.7)",
+      }}/>
+    </div>
   );
 }
 
