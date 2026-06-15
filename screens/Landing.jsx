@@ -197,26 +197,8 @@ function Landing({ go }) {
         <PrizesBlock/>
       </div>
 
-      {/* Frase con foto */}
-      <div style={{padding:"24px 16px 0"}}>
-        <div style={{
-          borderRadius:28, overflow:"hidden", position:"relative",
-          aspectRatio:"16/11",
-          background:"linear-gradient(180deg, rgba(26,25,22,0.1) 30%, rgba(26,25,22,0.85) 100%), url('assets/photo-tamarindo.jpg')",
-          backgroundSize:"cover", backgroundPosition:"center",
-        }}>
-          <div style={{
-            position:"absolute", inset:"auto 18px 16px",
-          }}>
-            <Eyebrow color="var(--neon-citrus)">Refrán de la casa</Eyebrow>
-            <div style={{
-              fontFamily:"var(--font-title)", fontSize:22, color:"var(--cream-100)",
-              textTransform:"uppercase", letterSpacing:"0.02em", lineHeight:1.05, marginTop:4,
-              textWrap:"balance",
-            }}>El Mundial se juega<br/>en la cancha,<br/><span style={{color:"var(--orange-400)"}}>se gana en Refugio.</span></div>
-          </div>
-        </div>
-      </div>
+      {/* Mini-chat de la barra (enlaza al chat completo) */}
+      <ChatPreview go={go}/>
 
       {/* CTA final */}
       <div style={{padding:"20px 16px 0"}}>
