@@ -4,6 +4,7 @@
 
 function Matches({ go }) {
   const [filter, setFilter] = useState("todos"); // todos | hoy | abiertos | mios
+  const [showPast, setShowPast] = useState(false); // días ya jugados colapsados (vista Todos)
   const [preds, setPreds] = useState(window.ProdeStore?.getPredictions?.() || { ...window.MY_PREDICTIONS });
   const [toast, setToast] = useState(null);
   const [version, setVersion] = useState(0);
@@ -59,6 +60,44 @@ function Matches({ go }) {
   // stats
   const total = all.filter(m => m.status === "abierto").length;
   const done  = Object.keys(preds).filter(id => all.find(m => m.id === id && m.status === "abierto")).length;
+
+  // Medianoche de HOY en Costa Rica (UTC−6): los partidos de días anteriores
+  // se agrupan colapsados. Sólo se separan en la vista "Todos".
+  const crNow = new Date(now - 6 * 60 * 60 * 1000);
+  const todayStartMs = Date.UTC(crNow.getUTCFullYear(), crNow.getUTCMonth(), crNow.getUTCDate()) + 6 * 60 * 60 * 1000;
+  const isPastDay = (ms) => ms[0]?.kickoffAt && Date.parse(ms[0].kickoffAt) < todayStartMs;
+  const isTodayDay = (ms) => {
+    const k = ms[0]?.kickoffAt ? Date.parse(ms[0].kickoffAt) : 0;
+    return k >= todayStartMs && k < todayStartMs + 24 * 60 * 60 * 1000;
+  };
+
+  const entries = Object.entries(groups); // [date, ms][] en orden cronológico
+  const collapsePast = filter === "todos";
+  const pastEntries = collapsePast ? entries.filter(([, ms]) => isPastDay(ms)) : [];
+  const currentEntries = collapsePast ? entries.filter(([, ms]) => !isPastDay(ms)) : entries;
+  const pastCount = pastEntries.reduce((n, [, ms]) => n + ms.length, 0);
+
+  const renderGroup = (date, ms) => (
+    <div key={date}>
+      <div style={{display:"flex", alignItems:"center", gap:10, padding:"14px 0 6px"}}>
+        <Eyebrow color="var(--neon-citrus)">{date}</Eyebrow>
+        {isTodayDay(ms) && (
+          <span style={{
+            fontSize:8, fontWeight:700, letterSpacing:"0.2em", color:"var(--char-900)",
+            background:"var(--neon-citrus)", borderRadius:999, padding:"2px 7px",
+          }}>HOY</span>
+        )}
+        <div style={{flex:1, height:1, background:"var(--char-700)"}}/>
+        <Eyebrow color="var(--char-500)">{ms.length} partidos</Eyebrow>
+      </div>
+      {ms.map(m => (
+        <MatchRow key={m.id} match={m}
+          prediction={preds[m.id]}
+          onChange={(v)=>setPred(m.id, v)}
+          locked={window.ProdeScoring?.isLocked?.(m, now) ?? (m.status !== "abierto")}/>
+      ))}
+    </div>
+  );
 
   return (
     <div style={{paddingBottom: 16}}>
@@ -124,24 +163,27 @@ function Matches({ go }) {
               : "No hay partidos para este filtro."}
           </div>
         )}
-        {Object.entries(groups).map(([date, ms]) => (
-          <div key={date}>
-            <div style={{
-              display:"flex", alignItems:"center", gap:10,
-              padding:"14px 0 6px",
+        {/* días ya jugados: colapsados, se despliegan al tocar (sólo en Todos) */}
+        {collapsePast && pastEntries.length > 0 && (
+          <div style={{marginBottom: showPast ? 4 : 0}}>
+            <button onClick={()=>setShowPast(v=>!v)} style={{
+              width:"100%", display:"flex", alignItems:"center", gap:8,
+              padding:"11px 12px", borderRadius:12, cursor:"pointer",
+              background:"var(--char-800)", border:"1px solid var(--char-700)",
+              color:"var(--char-200)", textAlign:"left",
             }}>
-              <Eyebrow color="var(--neon-citrus)">{date}</Eyebrow>
-              <div style={{flex:1, height:1, background:"var(--char-700)"}}/>
-              <Eyebrow color="var(--char-500)">{ms.length} partidos</Eyebrow>
-            </div>
-            {ms.map(m => (
-              <MatchRow key={m.id} match={m}
-                prediction={preds[m.id]}
-                onChange={(v)=>setPred(m.id, v)}
-                locked={window.ProdeScoring?.isLocked?.(m, now) ?? (m.status !== "abierto")}/>
-            ))}
+              <span style={{fontSize:12, color:"var(--char-400)"}}>{showPast ? "▾" : "▸"}</span>
+              <span style={{
+                flex:1, fontSize:11, fontWeight:700, letterSpacing:"0.16em", textTransform:"uppercase",
+              }}>Partidos jugados</span>
+              <span style={{fontSize:11, color:"var(--char-400)", fontWeight:700}}>{pastCount}</span>
+            </button>
+            {showPast && pastEntries.map(([date, ms]) => renderGroup(date, ms))}
           </div>
-        ))}
+        )}
+
+        {/* hoy + próximos */}
+        {currentEntries.map(([date, ms]) => renderGroup(date, ms))}
       </div>
 
       {/* especiales banner */}
