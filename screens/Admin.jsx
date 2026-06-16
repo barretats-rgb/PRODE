@@ -7,6 +7,17 @@ function Admin({ go }) {
   const [tab, setTab] = useState("resultados");
   const [matches, setMatches] = useState(window.ProdeStore?.getMatches?.() || window.MATCHES);
   const [saving, setSaving] = useState(null);
+  const [resFilter, setResFilter] = useState("hoy"); // hoy | todos (carga de resultados)
+
+  // Día calendario de Costa Rica (UTC−6), para filtrar "Hoy" en la carga.
+  const crDayKey = (ms) => {
+    const d = new Date(ms - 6 * 60 * 60 * 1000);
+    return `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
+  };
+  const todayKey = crDayKey(Date.now());
+  const matchesByFilter = resFilter === "hoy"
+    ? matches.filter((m) => m.kickoffAt && crDayKey(Date.parse(m.kickoffAt)) === todayKey)
+    : matches;
 
   useEffect(() => {
     const onData = () => {
@@ -195,14 +206,39 @@ function Admin({ go }) {
               nunca el ganador de los penales. Si se definió por penales, va el <span style={{color:"var(--neon-citrus)", fontWeight:700}}>empate</span>.
             </div>
           </div>
+
+          {/* filtro Hoy / Todos */}
+          <div style={{display:"flex", gap:7, marginBottom:12}}>
+            {[{id:"hoy",label:"Hoy"},{id:"todos",label:"Todos"}].map(f => {
+              const on = resFilter === f.id;
+              return (
+                <button key={f.id} onClick={()=>setResFilter(f.id)} style={{
+                  padding:"7px 16px", borderRadius:999, cursor:"pointer",
+                  border:`1px solid ${on ? "var(--neon-citrus)" : "var(--char-600)"}`,
+                  background: on ? "var(--neon-citrus)" : "transparent",
+                  color: on ? "var(--char-900)" : "var(--cream-100)",
+                  fontFamily:"var(--font-body)", fontWeight:700,
+                  fontSize:10, letterSpacing:"0.18em", textTransform:"uppercase",
+                }}>{f.label}</button>
+              );
+            })}
+          </div>
+
+          {resFilter === "hoy" && matchesByFilter.length === 0 && (
+            <div style={{padding:"18px 14px", textAlign:"center", fontSize:12, color:"var(--char-300)", lineHeight:1.5,
+              borderRadius:14, background:"var(--char-800)", border:"1px solid var(--char-700)"}}>
+              No hay partidos hoy. Tocá <span style={{color:"var(--neon-citrus)", fontWeight:700}}>Todos</span> para ver el calendario completo.
+            </div>
+          )}
+
           <div style={{
             borderRadius:18, overflow:"hidden",
             background:"var(--char-800)", border:"1px solid var(--char-700)",
           }}>
-            {matches.map((m, i) => (
+            {matchesByFilter.map((m, i) => (
               <div key={m.id} style={{
                 padding:"12px 13px",
-                borderBottom: i < matches.length - 1 ? "1px solid var(--char-700)" : 0,
+                borderBottom: i < matchesByFilter.length - 1 ? "1px solid var(--char-700)" : 0,
                 display:"flex", alignItems:"center", gap:10,
               }}>
                 <Flag code={m.a} size={22}/>

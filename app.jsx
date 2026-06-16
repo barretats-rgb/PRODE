@@ -195,6 +195,17 @@ function DesktopAdmin() {
     setMatches(ms => ms.map(m => m.id === id ? { ...m, [side]: value } : m));
   };
 
+  // Filtro Hoy / Todos en la carga de resultados.
+  const [resFilter, setResFilter] = useState("hoy");
+  const crDayKey = (ms) => {
+    const d = new Date(ms - 6 * 60 * 60 * 1000);
+    return `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
+  };
+  const todayKey = crDayKey(Date.now());
+  const matchesByFilter = resFilter === "hoy"
+    ? matches.filter((m) => m.kickoffAt && crDayKey(Date.parse(m.kickoffAt)) === todayKey)
+    : matches;
+
   // Gestión de jugadores (mismo modelo que la vista compacta): ranking en vivo + expulsar.
   const [tab, setTab] = useState("resultados");
   const [players, setPlayers] = useState([]);
@@ -293,6 +304,30 @@ function DesktopAdmin() {
           </div>
         </div>
 
+        {/* filtro Hoy / Todos */}
+        <div style={{display:"flex", gap:8, marginBottom:14}}>
+          {[{id:"hoy",label:"Hoy"},{id:"todos",label:"Todos"}].map(f => {
+            const on = resFilter === f.id;
+            return (
+              <button key={f.id} onClick={()=>setResFilter(f.id)} style={{
+                padding:"8px 18px", borderRadius:999, cursor:"pointer",
+                border:`1px solid ${on ? "var(--neon-citrus)" : "var(--char-600)"}`,
+                background: on ? "var(--neon-citrus)" : "transparent",
+                color: on ? "var(--char-900)" : "var(--cream-100)",
+                fontFamily:"var(--font-body)", fontWeight:700,
+                fontSize:11, letterSpacing:"0.18em", textTransform:"uppercase",
+              }}>{f.label}</button>
+            );
+          })}
+        </div>
+
+        {resFilter === "hoy" && matchesByFilter.length === 0 && (
+          <div style={{padding:"18px", textAlign:"center", fontSize:13, color:"var(--char-300)",
+            borderRadius:14, background:"var(--char-800)", border:"1px solid var(--char-700)", marginBottom:14}}>
+            No hay partidos hoy. Tocá <span style={{color:"var(--neon-citrus)", fontWeight:700}}>Todos</span> para ver el calendario completo.
+          </div>
+        )}
+
         {/* table */}
         <div style={{
           borderRadius:14, overflow:"hidden", background:"var(--char-800)",
@@ -306,7 +341,7 @@ function DesktopAdmin() {
             <span>FECHA</span><span>Partido</span><span>Resultado</span><span>Estado</span><span>Sede</span>
             <span>Hora</span><span></span>
           </div>
-          {matches.map((m,i) => {
+          {matchesByFilter.map((m,i) => {
             const saveRow = () => {
               const scoreA = Number(m.scoreA || 0);
               const scoreB = Number(m.scoreB || 0);
@@ -318,7 +353,7 @@ function DesktopAdmin() {
             };
             return (
             <div key={m.id} style={{
-              padding:"12px 16px", borderBottom: i < matches.length - 1 ? "1px solid var(--char-700)" : 0,
+              padding:"12px 16px", borderBottom: i < matchesByFilter.length - 1 ? "1px solid var(--char-700)" : 0,
               display:"grid", gridTemplateColumns:"70px 1.35fr 120px 120px 1fr 90px 80px", gap:12,
               alignItems:"center", fontSize:12,
             }}>
