@@ -2,7 +2,7 @@
    SCREEN: Ranking general
    ============================================================ */
 
-/* Indicador de movimiento de posición: ▲N (subió) en citrus, ▼N (bajó) en coral.
+/* Indicador de movimiento de posición: ▲N (subió) en verde, ▼N (bajó) en coral.
    move = null o 0 → no muestra nada. */
 function MoveTag({ move, size = 10 }) {
   if (!move) return null;
@@ -11,7 +11,7 @@ function MoveTag({ move, size = 10 }) {
     <span style={{
       display:"inline-flex", alignItems:"center", gap:1,
       fontSize:size, fontWeight:700, lineHeight:1,
-      color: up ? "var(--neon-citrus)" : "var(--neon-coral)",
+      color: up ? "var(--neon-green)" : "var(--neon-coral)",
     }}>
       <i data-lucide={up ? "arrow-up" : "arrow-down"} style={{width:size, height:size}}></i>
       {Math.abs(move)}
