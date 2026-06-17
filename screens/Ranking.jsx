@@ -2,6 +2,23 @@
    SCREEN: Ranking general
    ============================================================ */
 
+/* Indicador de movimiento de posición: ▲N (subió) en citrus, ▼N (bajó) en coral.
+   move = null o 0 → no muestra nada. */
+function MoveTag({ move, size = 10 }) {
+  if (!move) return null;
+  const up = move > 0;
+  return (
+    <span style={{
+      display:"inline-flex", alignItems:"center", gap:1,
+      fontSize:size, fontWeight:700, lineHeight:1,
+      color: up ? "var(--neon-citrus)" : "var(--neon-coral)",
+    }}>
+      <i data-lucide={up ? "arrow-up" : "arrow-down"} style={{width:size, height:size}}></i>
+      {Math.abs(move)}
+    </span>
+  );
+}
+
 function Ranking({ go }) {
   const [highlight, setHighlight] = useState(null);
   const [players, setPlayers] = useState(null);
@@ -127,6 +144,9 @@ function Ranking({ go }) {
             <div style={{textAlign:"right"}}>
               <div style={{fontFamily:"var(--font-title)", fontSize:22, color:"var(--neon-citrus)", lineHeight:1}}>{you.pts}</div>
               <div style={{fontSize:9, color:"var(--char-400)", letterSpacing:"0.18em", marginTop:2}}>PUNTOS</div>
+              <div style={{display:"flex", justifyContent:"flex-end", marginTop:3}}>
+                <MoveTag move={you.move} size={11}/>
+              </div>
             </div>
           </div>
         </div>
@@ -217,6 +237,9 @@ function PodiumCol({ player, pos, h, tone }) {
         textWrap:"balance",
       }}>{player.name.split("(")[0]}</div>
       <div style={{fontSize:9, color:"var(--char-400)", letterSpacing:"0.1em", marginTop:2}}>{player.nat}</div>
+      <div style={{display:"flex", justifyContent:"center", marginTop:4, height:13}}>
+        <MoveTag move={player.move}/>
+      </div>
       <div style={{
         marginTop:8, height:h, borderRadius:"18px 18px 0 0",
         background:`linear-gradient(180deg, ${colors[tone]} 0%, var(--char-700) 100%)`,
@@ -286,12 +309,9 @@ function RankRow({ r, expanded, onClick }) {
             color: r.you ? "var(--neon-citrus)" : "var(--cream-100)",
             lineHeight:1,
           }}>{r.pts}</div>
-          {r.trend !== "flat" && (
-            <i data-lucide={r.trend==="up"?"arrow-up":"arrow-down"} style={{
-              width:10, height:10, marginTop:2,
-              color: r.trend==="up" ? "var(--neon-citrus)" : "var(--neon-coral)",
-            }}></i>
-          )}
+          <div style={{display:"flex", justifyContent:"flex-end", marginTop:2}}>
+            <MoveTag move={r.move}/>
+          </div>
         </div>
       </div>
       {expanded && (
