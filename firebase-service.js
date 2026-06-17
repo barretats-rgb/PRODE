@@ -319,6 +319,10 @@
     });
     // 3) calcular el reparto (puro, testeado)
     const { perPrediction, perPlayer } = window.ProdeScoring.scoreMatchFanout(finalized, preds);
+    // 3.5) Foto de posiciones ANTES de aplicar puntos (para el movimiento del ranking).
+    const playersSnap = await collection("players").get();
+    const allPlayers = playersSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const beforeRanks = window.ProdeRanking.computeRanks(allPlayers);
     // 4) aplicar en batches (≤450 escrituras por batch)
     const inc = window.firebase.firestore.FieldValue.increment;
     let batch = state.db.batch();
@@ -335,12 +339,28 @@
     const weekId = matchInfo?.kickoffAt && window.ProdeWeekly
       ? window.ProdeWeekly.weekIdForDate(matchInfo.kickoffAt)
       : null;
+    // Todos los jugadores reciben prevRank (un jugador puede moverse porque otros lo pasan);
+    // los que predijeron este partido reciben además sus deltas de puntos.
+    const applied = new Set();
+    for (const pl of allPlayers) {
+      const patch = { prevRank: beforeRanks[pl.id] };
+      const d = perPlayer[pl.id];
+      if (d) {
+        patch.points = inc(d.points); patch.exact = inc(d.exact);
+        patch.winner = inc(d.winner); patch.played = inc(d.played);
+        // Bucket semanal: mismo delta idempotente que el total. set+merge con mapa
+        // anidado mergea recursivamente (no pisa otras semanas).
+        if (weekId) patch.weekly = { [weekId]: { points: inc(d.points), exact: inc(d.exact) } };
+        applied.add(pl.id);
+      }
+      batch.set(collection("players").doc(pl.id), patch, { merge: true });
+      if (++writes >= 450) await flush();
+    }
+    // Defensa: predicción de un jugador sin doc en `players` (no debería pasar). Suma sus
+    // deltas igual, sin prevRank.
     for (const [playerId, d] of Object.entries(perPlayer)) {
-      const patch = {
-        points: inc(d.points), exact: inc(d.exact), winner: inc(d.winner), played: inc(d.played),
-      };
-      // Bucket semanal: mismo delta idempotente que el total. set+merge con mapa
-      // anidado mergea recursivamente (no pisa otras semanas).
+      if (applied.has(playerId)) continue;
+      const patch = { points: inc(d.points), exact: inc(d.exact), winner: inc(d.winner), played: inc(d.played) };
       if (weekId) patch.weekly = { [weekId]: { points: inc(d.points), exact: inc(d.exact) } };
       batch.set(collection("players").doc(playerId), patch, { merge: true });
       if (++writes >= 450) await flush();
@@ -447,6 +467,10 @@
     // El doc id ES el uid (ver saveSpecials): autoritativo por sobre el campo playerId.
     const preds = snap.docs.map((doc) => ({ ...doc.data(), playerId: doc.id }));
     const { perPrediction, perPlayer } = window.ProdeSpecials.scoreSpecialsFanout(official, preds);
+    // Foto de posiciones ANTES de sumar los especiales (para el movimiento del ranking).
+    const playersSnap = await collection("players").get();
+    const allPlayers = playersSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const beforeRanks = window.ProdeRanking.computeRanks(allPlayers);
     const inc = window.firebase.firestore.FieldValue.increment;
     let batch = state.db.batch();
     let writes = 0;
@@ -455,11 +479,20 @@
       batch.set(collection("specialPredictions").doc(pp.playerId), { awarded: pp.awarded }, { merge: true });
       if (++writes >= 450) await flush();
     }
+    const applied = new Set();
     for (const [playerId, d] of Object.entries(perPlayer)) {
       // Los especiales suman al total del ranking; NO tocan los buckets semanales.
       batch.set(collection("players").doc(playerId), {
         specialsPoints: inc(d.specialsPoints), points: inc(d.specialsPoints),
+        prevRank: beforeRanks[playerId],
       }, { merge: true });
+      applied.add(playerId);
+      if (++writes >= 450) await flush();
+    }
+    // Resto de jugadores: sólo prevRank (su posición pudo cambiar al moverse otros).
+    for (const pl of allPlayers) {
+      if (applied.has(pl.id)) continue;
+      batch.set(collection("players").doc(pl.id), { prevRank: beforeRanks[pl.id] }, { merge: true });
       if (++writes >= 450) await flush();
     }
     await flush();
