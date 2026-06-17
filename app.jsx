@@ -26,6 +26,15 @@ const NAV_ITEMS = [
   { screen:"admin",   label:"Admin",   icon:"settings", admin:true },
 ];
 
+// Globito rojo de no leídos sobre el ícono de Chat en la nav.
+const CHAT_BADGE_STYLE = {
+  position: "absolute", top: -7, right: -9, minWidth: 15, height: 15,
+  padding: "0 4px", borderRadius: 999, background: "#E5484D", color: "#fff",
+  fontSize: 9, fontWeight: 800, lineHeight: "15px", textAlign: "center",
+  letterSpacing: 0, boxSizing: "border-box", pointerEvents: "none",
+  boxShadow: "0 0 0 2px var(--char-900)",
+};
+
 function useIsDesktop() {
   const [isDesktop, setIsDesktop] = useState(() => window.innerWidth > 860);
   useEffect(() => {
@@ -36,7 +45,7 @@ function useIsDesktop() {
   return isDesktop;
 }
 
-function AppNav({ screen, go, isAdmin }) {
+function AppNav({ screen, go, isAdmin, unread }) {
   const items = NAV_ITEMS.filter(item => !item.admin || isAdmin);
   return (
     <nav className="app-nav">
@@ -45,7 +54,12 @@ function AppNav({ screen, go, isAdmin }) {
           key={item.screen}
           className={(screen === item.screen ? "on " : "") + (item.admin ? "admin" : "")}
           onClick={() => go(item.screen)}>
-          <i data-lucide={item.icon}></i>
+          <span style={{position:"relative", display:"inline-flex"}}>
+            <i data-lucide={item.icon}></i>
+            {item.screen === "chat" && unread > 0 && (
+              <span style={CHAT_BADGE_STYLE}>{window.ProdeChat?.formatBadge?.(unread)}</span>
+            )}
+          </span>
           {item.label}
         </button>
       ))}
@@ -53,13 +67,18 @@ function AppNav({ screen, go, isAdmin }) {
   );
 }
 
-function MobileBottomNav({ screen, go, isAdmin }) {
+function MobileBottomNav({ screen, go, isAdmin, unread }) {
   const items = NAV_ITEMS.filter(item => !item.admin || isAdmin);
   return (
     <nav className="mobile-bottom-nav">
       {items.map(item => (
         <button key={item.screen} className={screen === item.screen ? "on" : ""} onClick={() => go(item.screen)}>
-          <i data-lucide={item.icon}></i>
+          <span style={{position:"relative", display:"inline-flex"}}>
+            <i data-lucide={item.icon}></i>
+            {item.screen === "chat" && unread > 0 && (
+              <span style={CHAT_BADGE_STYLE}>{window.ProdeChat?.formatBadge?.(unread)}</span>
+            )}
+          </span>
           <span>{item.label}</span>
         </button>
       ))}
@@ -89,6 +108,48 @@ function App() {
     return () => unsub && unsub();
   }, [auth?.user?.uid]);
 
+  // Chat: suscripción global liviana (últimos 30) para el badge de no leídos en la nav.
+  const myUid = auth?.user?.uid;
+  const [chatMessages, setChatMessages] = useState([]);
+  useEffect(() => {
+    if (!myUid) { setChatMessages([]); return; }
+    const unsub = window.ProdeDB?.subscribeMessages?.((list) => setChatMessages(list || []), 30);
+    return () => unsub && unsub();
+  }, [myUid]);
+
+  // Última lectura del chat para este usuario (por dispositivo, en localStorage).
+  // Sin valor previo → se inicializa en ahora (no notificar todo el historial).
+  const [lastReadMs, setLastReadMs] = useState(0);
+  useEffect(() => {
+    if (!myUid) { setLastReadMs(0); return; }
+    const key = "prode_chat_lastread_" + myUid;
+    const raw = localStorage.getItem(key);
+    const n = Number(raw);
+    if (raw != null && Number.isFinite(n)) {
+      setLastReadMs(n);
+    } else {
+      const now = Date.now();
+      localStorage.setItem(key, String(now));
+      setLastReadMs(now);
+    }
+  }, [myUid]);
+
+  // Marcar leído al estar en la pestaña Chat: avanza la última lectura al mensaje más
+  // nuevo conocido (o ahora). Re-corre si llegan mensajes mientras estás adentro.
+  useEffect(() => {
+    if (screen !== "chat" || !myUid) return;
+    const msOf = window.ProdeChat?.msOf || (() => 0);
+    const newest = (chatMessages || []).reduce((mx, m) => Math.max(mx, msOf(m.createdAt)), 0);
+    const mark = Math.max(newest, Date.now());
+    localStorage.setItem("prode_chat_lastread_" + myUid, String(mark));
+    setLastReadMs(mark);
+  }, [screen, chatMessages, myUid]);
+
+  // Contador para el badge (0 si estás en la pantalla Chat: ya lo estás leyendo).
+  const chatUnread = screen === "chat"
+    ? 0
+    : (window.ProdeChat?.countUnread?.(chatMessages, lastReadMs, myUid) || 0);
+
   // Tick para refrescar el "en línea" aunque no lleguen snapshots nuevos.
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 30000);
@@ -110,7 +171,7 @@ function App() {
 
   useEffect(() => {
     if (window.lucide) window.lucide.createIcons();
-  }, [screen, tweaks, isDesktop, auth]);
+  }, [screen, tweaks, isDesktop, auth, chatUnread]);
 
   useEffect(() => {
     const map = { citrus: "#E8F26A", coral: "#FF7A3D", sage: "#B6BF93" };
@@ -157,7 +218,7 @@ function App() {
           <div className="app-logo">REFU<br/><span>GIO</span></div>
           <div className="app-brand-meta">Prode Mundial '26<br/>Tamarindo</div>
         </div>
-        <AppNav screen={screen} go={go} isAdmin={isAdmin}/>
+        <AppNav screen={screen} go={go} isAdmin={isAdmin} unread={chatUnread}/>
         <div className="app-side-card">
           <Eyebrow color="var(--neon-citrus)">Estado</Eyebrow>
           <div style={{fontFamily:"var(--font-title)",fontSize:18,color:"var(--cream-100)",textTransform:"uppercase",marginTop:5}}>
@@ -177,7 +238,7 @@ function App() {
         </div>
       </main>
 
-      <MobileBottomNav screen={screen} go={go} isAdmin={isAdmin}/>
+      <MobileBottomNav screen={screen} go={go} isAdmin={isAdmin} unread={chatUnread}/>
     </div>
   );
 }
