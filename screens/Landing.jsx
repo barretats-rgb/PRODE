@@ -173,8 +173,23 @@ function Landing({ go }) {
         <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:10}}>
           <PointCard pts="5" label="Resultado exacto" sub="2–1 es 2–1" tone="citrus"/>
           <PointCard pts="3" label="Ganador correcto" sub="O empate" tone="orange"/>
-          <PointCard pts="+1" label="Diferencia de gol" sub="Punto extra" tone="sage"/>
+          <PointCard pts="+1" label="Diferencia de gol" sub="Acertás por cuánto gana" tone="sage"/>
           <PointCard pts="★" label="Especiales" sub="Campeón, goleador..." tone="cream"/>
+        </div>
+
+        {/* Aclaración del +1 por diferencia de gol */}
+        <div style={{
+          marginTop:10, padding:"12px 14px", borderRadius:14,
+          background:"var(--char-800)", border:"1px solid var(--char-700)",
+          display:"flex", alignItems:"flex-start", gap:10,
+        }}>
+          <i data-lucide="plus" style={{width:16, height:16, color:"var(--sage-300)", flexShrink:0, marginTop:1}}></i>
+          <div style={{fontSize:12, color:"var(--char-200)", lineHeight:1.5}}>
+            <span style={{color:"var(--cream-100)", fontWeight:700}}>El +1</span> se suma cuando acertás el ganador
+            <span style={{fontWeight:700}}> y</span> por cuántos goles gana, aunque no aciertes el marcador exacto.
+            Ej.: sale <span style={{color:"var(--sage-300)", fontWeight:700}}>2–0</span> y pusiste <span style={{color:"var(--sage-300)", fontWeight:700}}>3–1</span> (los
+            dos ganan por 2) → te llevás <span style={{color:"var(--neon-citrus)", fontWeight:700}}>4</span>. No corre en empates.
+          </div>
         </div>
 
         {/* Aclaración fase de eliminación */}
