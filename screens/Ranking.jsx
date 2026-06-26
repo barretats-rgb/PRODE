@@ -336,9 +336,10 @@ function WeeklyPrize({ players }) {
   const prize = window.PRIZES?.weekly;
   if (!W || !prize) return null;
   const weekId = W.currentWeekId(Date.now());
-  const leaders = W.weeklyLeaders(players, weekId);
+  const top = W.weeklyTop(players, weekId, 3);
   const history = W.weeklyHistory(players, weekId);
   const initials = (n) => window.ProdeRanking?.initials?.(n) || "JR";
+  const posTone = ["citrus", "char", "orange"]; // 1°/2°/3°
 
   return (
     <div style={{padding:"14px 16px 0"}}>
@@ -352,23 +353,34 @@ function WeeklyPrize({ players }) {
           <Eyebrow color="var(--neon-citrus)">{W.weekLabel(weekId)} · {prize.title}</Eyebrow>
           <Eyebrow color="var(--cream-100)" style={{fontSize:9}}>{prize.reward}</Eyebrow>
         </div>
-        {leaders.length === 0 ? (
+        {top.length === 0 ? (
           <div style={{fontSize:12, color:"var(--char-200)", marginTop:8, lineHeight:1.4}}>
             Nadie sumó puntos esta semana todavía. El que más haga se lleva el premio.
           </div>
         ) : (
           <div style={{display:"flex", flexDirection:"column", gap:8, marginTop:10}}>
-            {leaders.map((l) => (
+            {top.map((l, i) => {
+              const sub = i === 0
+                ? "LÍDER DE LA SEMANA"
+                : l.gap > 0
+                  ? `A ${l.gap} ${l.gap === 1 ? "PUNTO" : "PUNTOS"} DE LA PUNTA`
+                  : "EMPATADO EN PUNTOS";
+              return (
               <div key={l.id} style={{display:"flex", alignItems:"center", gap:10}}>
-                <Avatar initials={initials(l.name)} size={32} tone="citrus"/>
+                <div style={{
+                  width:22, flexShrink:0, textAlign:"center",
+                  fontFamily:"var(--font-title)", fontSize:15, lineHeight:1,
+                  color: i === 0 ? "var(--neon-citrus)" : "var(--char-300)",
+                }}>{i + 1}°</div>
+                <Avatar initials={initials(l.name)} size={32} tone={posTone[i] || "char"}/>
                 <div style={{flex:1, minWidth:0}}>
                   <div style={{
                     fontFamily:"var(--font-title)", fontSize:14, color:"var(--cream-100)",
                     textTransform:"uppercase", letterSpacing:"0.02em",
                     whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis",
                   }}>{l.name}</div>
-                  <div style={{fontSize:9, color:"var(--char-300)", letterSpacing:"0.12em", marginTop:2}}>
-                    {leaders.length > 1 ? "EMPATADOS · LO RESUELVE EL BAR" : "LÍDER DE LA SEMANA"}
+                  <div style={{fontSize:9, color: i === 0 ? "var(--neon-citrus)" : "var(--char-300)", letterSpacing:"0.12em", marginTop:2}}>
+                    {sub}
                   </div>
                 </div>
                 <div style={{textAlign:"right"}}>
@@ -376,7 +388,8 @@ function WeeklyPrize({ players }) {
                   <div style={{fontSize:8, color:"var(--char-400)", letterSpacing:"0.18em", marginTop:2}}>PTS SEMANA</div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
