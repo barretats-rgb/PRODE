@@ -256,12 +256,26 @@ function Countdown({ target = "2026-06-12T18:00:00", label = "Argentina vs Croac
   );
 }
 
+/* Círculo neutro con "?" para un equipo todavía "a definir" (eliminación). */
+function TbdFlag({ size = 32 }) {
+  return (
+    <div style={{
+      width:size, height:size, borderRadius:"50%", flexShrink:0,
+      background:"var(--char-700)", border:"1px solid var(--char-600)",
+      display:"flex", alignItems:"center", justifyContent:"center",
+      color:"var(--char-400)", fontFamily:"var(--font-title)", fontSize:size*0.5,
+    }}>?</div>
+  );
+}
+
 /* ---------- MatchRow (compact) ---------- */
 function MatchRow({ match, prediction, onChange, locked }) {
   const m = match;
   const live = m.status === "vivo";
   const done = m.status === "finalizado";
   const open = m.status === "abierto";
+  // "A definir": algún equipo del cruce todavía no está confirmado (eliminación).
+  const tbd = !window.ProdeScoring.teamsKnown(m);
 
   // For done matches, show real score; for vivo, show real running score; for open, show inputs.
   const showLiveScore = live || done;
@@ -291,13 +305,13 @@ function MatchRow({ match, prediction, onChange, locked }) {
       }}>
         {/* TEAM A */}
         <div style={{display:"flex", alignItems:"center", gap:10, justifyContent:"flex-start"}}>
-          <Flag code={m.a} size={32}/>
+          {m.a ? <Flag code={m.a} size={32}/> : <TbdFlag size={32}/>}
           <div>
             <div style={{
-              fontFamily:"var(--font-title)", fontSize:16, color:"var(--cream-100)",
-              textTransform:"uppercase", letterSpacing:"0.02em", lineHeight:1,
-            }}>{window.TEAMS[m.a]}</div>
-            <div style={{fontSize:9, color:"var(--char-400)", letterSpacing:"0.18em", marginTop:3, fontWeight:600}}>{m.a}</div>
+              fontFamily:"var(--font-title)", fontSize: m.a ? 16 : 12, color:"var(--cream-100)",
+              textTransform:"uppercase", letterSpacing:"0.02em", lineHeight:1.05,
+            }}>{m.a ? window.TEAMS[m.a] : (m.aLabel || "A definir")}</div>
+            {m.a && <div style={{fontSize:9, color:"var(--char-400)", letterSpacing:"0.18em", marginTop:3, fontWeight:600}}>{m.a}</div>}
           </div>
         </div>
 
@@ -315,6 +329,8 @@ function MatchRow({ match, prediction, onChange, locked }) {
                 color: live ? "var(--neon-coral)" : "var(--cream-100)",
               }}>{m.scoreB}</div>
             </>
+          ) : tbd ? (
+            <div style={{color:"var(--char-500)", fontSize:22, fontFamily:"var(--font-title)"}}>–</div>
           ) : (
             <>
               <NumStepper value={prediction?.a} onChange={(v)=>onChange?.({a:v, b:prediction?.b ?? 0})} disabled={locked}/>
@@ -328,15 +344,24 @@ function MatchRow({ match, prediction, onChange, locked }) {
         <div style={{display:"flex", alignItems:"center", gap:10, justifyContent:"flex-end"}}>
           <div style={{textAlign:"right"}}>
             <div style={{
-              fontFamily:"var(--font-title)", fontSize:16, color:"var(--cream-100)",
-              textTransform:"uppercase", letterSpacing:"0.02em", lineHeight:1,
-            }}>{window.TEAMS[m.b]}</div>
-            <div style={{fontSize:9, color:"var(--char-400)", letterSpacing:"0.18em", marginTop:3, fontWeight:600}}>{m.b}</div>
+              fontFamily:"var(--font-title)", fontSize: m.b ? 16 : 12, color:"var(--cream-100)",
+              textTransform:"uppercase", letterSpacing:"0.02em", lineHeight:1.05,
+            }}>{m.b ? window.TEAMS[m.b] : (m.bLabel || "A definir")}</div>
+            {m.b && <div style={{fontSize:9, color:"var(--char-400)", letterSpacing:"0.18em", marginTop:3, fontWeight:600}}>{m.b}</div>}
           </div>
-          <Flag code={m.b} size={32}/>
+          {m.b ? <Flag code={m.b} size={32}/> : <TbdFlag size={32}/>}
         </div>
       </div>
 
+      {open && tbd && (
+        <div style={{
+          marginTop:10, padding:"7px 10px", borderRadius:14,
+          background:"var(--char-900)", border:"1px dashed var(--char-600)",
+          fontSize:11, color:"var(--char-300)", textAlign:"center", letterSpacing:"0.04em",
+        }}>
+          Se habilita cuando se conozcan los equipos
+        </div>
+      )}
       {/* For open matches, show your prediction (mini) */}
       {open && prediction && (
         <div style={{
