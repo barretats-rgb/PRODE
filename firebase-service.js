@@ -306,9 +306,12 @@
   // predicciones y agregados (idempotente). Requiere ser admin (las reglas lo exigirán en 2D).
   // Si un batch falla a mitad de camino el estado queda parcial, pero como el reparto es
   // idempotente (usa el puntaje previo de cada predicción), volver a confirmar lo recompone.
-  async function finalizeMatch(matchId, scoreA, scoreB) {
+  async function finalizeMatch(matchId, scoreA, scoreB, advances) {
     if (!state.ready) throw new Error("Firebase no está listo.");
     const finalized = { status: "finalizado", scoreA: Number(scoreA), scoreB: Number(scoreB) };
+    // Eliminación por penales: quién avanzó (código de equipo). En partidos con ganador
+    // por marcador va null (el resolvedor lo ignora). No borra el marcador.
+    finalized.advances = advances || null;
     // 1) escribir el resultado del partido
     await collection("matches").doc(matchId).set({ ...finalized, updatedAt: firestoreNow() }, { merge: true });
     // 2) leer todas las predicciones del partido
