@@ -183,11 +183,14 @@
   function getMatches() {
     const overrides = getMatchOverrides();
     const remote = window.ProdeDB?.getMatchResults?.() || {};
-    return (window.MATCHES || []).map((match) => ({
+    const merged = (window.MATCHES || []).map((match) => ({
       ...match,
       ...(overrides[match.id] || {}),
       ...(remote[match.id] || {}),
     }));
+    // Auto-avance del cuadro: rellena los equipos de eliminación ya definidos.
+    // Tolerante: si el resolvedor no está cargado, devuelve el merge tal cual.
+    return window.ProdeBracket ? window.ProdeBracket.resolveBracket(merged) : merged;
   }
 
   async function saveMatchResult(matchId, result) {

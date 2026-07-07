@@ -257,6 +257,29 @@ window.MATCHES = [
     kickoffAt:"2026-07-19T13:00:00-06:00", a:null, b:null, aLabel:"Ganador de semifinal", bLabel:"Ganador de semifinal", status:"abierto", featured:true },
 ];
 
+// Cableado del cuadro eliminatorio (quién alimenta cada cruce), según el cuadro oficial
+// FIFA 2026. pick "W" = ganador, "L" = perdedor. Se adjunta como `feed` a cada partido;
+// el resolvedor (lib/bracket.js) lo usa para completar los equipos ronda a ronda.
+window.KO_FEED = {
+  m89:  { a:{ m:"m74", pick:"W" }, b:{ m:"m77", pick:"W" } },
+  m90:  { a:{ m:"m73", pick:"W" }, b:{ m:"m75", pick:"W" } },
+  m91:  { a:{ m:"m76", pick:"W" }, b:{ m:"m78", pick:"W" } },
+  m92:  { a:{ m:"m79", pick:"W" }, b:{ m:"m80", pick:"W" } },
+  m93:  { a:{ m:"m83", pick:"W" }, b:{ m:"m84", pick:"W" } },
+  m94:  { a:{ m:"m81", pick:"W" }, b:{ m:"m82", pick:"W" } },
+  m95:  { a:{ m:"m86", pick:"W" }, b:{ m:"m88", pick:"W" } },
+  m96:  { a:{ m:"m85", pick:"W" }, b:{ m:"m87", pick:"W" } },
+  m97:  { a:{ m:"m89", pick:"W" }, b:{ m:"m90", pick:"W" } },
+  m98:  { a:{ m:"m93", pick:"W" }, b:{ m:"m94", pick:"W" } },
+  m99:  { a:{ m:"m91", pick:"W" }, b:{ m:"m92", pick:"W" } },
+  m100: { a:{ m:"m95", pick:"W" }, b:{ m:"m96", pick:"W" } },
+  m101: { a:{ m:"m97", pick:"W" }, b:{ m:"m98", pick:"W" } },
+  m102: { a:{ m:"m99", pick:"W" }, b:{ m:"m100", pick:"W" } },
+  m103: { a:{ m:"m101", pick:"L" }, b:{ m:"m102", pick:"L" } },
+  m104: { a:{ m:"m101", pick:"W" }, b:{ m:"m102", pick:"W" } },
+};
+window.MATCHES.forEach((m) => { if (window.KO_FEED[m.id]) m.feed = window.KO_FEED[m.id]; });
+
 // Mis predicciones demo (vacío: el fixture real arranca sin predicciones cargadas)
 window.MY_PREDICTIONS = {};
 

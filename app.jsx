@@ -256,6 +256,10 @@ function DesktopAdmin() {
     setMatches(ms => ms.map(m => m.id === id ? { ...m, [side]: value } : m));
   };
 
+  const setDesktopAdvances = (id, code) => {
+    setMatches(ms => ms.map(m => m.id === id ? { ...m, advances: m.advances === code ? null : code } : m));
+  };
+
   // Filtro Hoy / Todos en la carga de resultados.
   const [resFilter, setResFilter] = useState("hoy");
   const crDayKey = (ms) => {
@@ -406,15 +410,17 @@ function DesktopAdmin() {
             const saveRow = () => {
               const scoreA = Number(m.scoreA || 0);
               const scoreB = Number(m.scoreB || 0);
+              const advances = scoreA === scoreB ? (m.advances || null) : null; // solo empate → penales
               setMatches(ms => ms.map(item => item.id === m.id ? {...item, scoreA, scoreB, status:"finalizado"} : item));
               const finalize = window.ProdeDB?.finalizeMatch
-                ? window.ProdeDB.finalizeMatch(m.id, scoreA, scoreB)
-                : window.ProdeStore?.saveMatchResult(m.id, {status:"finalizado", scoreA, scoreB});
+                ? window.ProdeDB.finalizeMatch(m.id, scoreA, scoreB, advances)
+                : window.ProdeStore?.saveMatchResult(m.id, {status:"finalizado", scoreA, scoreB, advances});
               Promise.resolve(finalize).catch((error) => console.warn("[Prode Refugio] No se pudo confirmar el resultado.", error));
             };
             return (
-            <div key={m.id} style={{
-              padding:"12px 16px", borderBottom: i < matchesByFilter.length - 1 ? "1px solid var(--char-700)" : 0,
+            <div key={m.id} style={{ borderBottom: i < matchesByFilter.length - 1 ? "1px solid var(--char-700)" : 0 }}>
+            <div style={{
+              padding:"12px 16px",
               display:"grid", gridTemplateColumns:"70px 1.35fr 120px 120px 1fr 90px 80px", gap:12,
               alignItems:"center", fontSize:12,
             }}>
@@ -449,6 +455,8 @@ function DesktopAdmin() {
                   <i data-lucide="check" style={{width:14,height:14}}></i>
                 </button>
               </div>
+            </div>
+            <PenaltyPicker match={m} onPick={(code) => setDesktopAdvances(m.id, code)} style={{padding:"0 16px 12px"}}/>
             </div>
           )})}
         </div>

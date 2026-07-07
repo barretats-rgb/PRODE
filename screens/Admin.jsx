@@ -32,15 +32,21 @@ function Admin({ go }) {
     setMatches(ms => ms.map(m => m.id === id ? { ...m, [side]: Number(val) || 0 } : m));
   };
 
+  // Marca quién avanzó por penales (toggle). Se guarda en memoria hasta confirmar.
+  const editAdvances = (id, code) => {
+    setMatches(ms => ms.map(m => m.id === id ? { ...m, advances: m.advances === code ? null : code } : m));
+  };
+
   // Confirma el resultado final del partido: escribe + reparte puntos (idempotente).
   const confirmResult = async (m) => {
     setSaving(m.id);
     try {
       const a = Number(m.scoreA) || 0, b = Number(m.scoreB) || 0;
+      const advances = a === b ? (m.advances || null) : null; // solo empate → penales
       if (window.ProdeDB?.finalizeMatch) {
-        await window.ProdeDB.finalizeMatch(m.id, a, b);
+        await window.ProdeDB.finalizeMatch(m.id, a, b, advances);
       } else {
-        await window.ProdeStore?.saveMatchResult(m.id, { status: "finalizado", scoreA: a, scoreB: b });
+        await window.ProdeStore?.saveMatchResult(m.id, { status: "finalizado", scoreA: a, scoreB: b, advances });
       }
     } catch (e) {
       console.error("[Prode Refugio] confirmar resultado", e);
@@ -239,8 +245,8 @@ function Admin({ go }) {
               <div key={m.id} style={{
                 padding:"12px 13px",
                 borderBottom: i < matchesByFilter.length - 1 ? "1px solid var(--char-700)" : 0,
-                display:"flex", alignItems:"center", gap:10,
               }}>
+                <div style={{display:"flex", alignItems:"center", gap:10}}>
                 <Flag code={m.a} size={22}/>
                 <input
                   type="number"
@@ -265,6 +271,8 @@ function Admin({ go }) {
                 >
                   {saving === m.id ? "Guardando..." : (m.status === "finalizado" ? "Recalcular" : "Confirmar")}
                 </Btn>
+                </div>
+                <PenaltyPicker match={m} onPick={(code) => editAdvances(m.id, code)}/>
               </div>
             ))}
           </div>

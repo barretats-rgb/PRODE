@@ -412,6 +412,33 @@ function MatchRow({ match, prediction, onChange, locked }) {
   );
 }
 
+/* Selector "¿Quién avanzó?" para un partido de eliminación con marcador empatado
+   (se define por penales). Se auto-oculta si no aplica. onPick recibe el código. */
+function PenaltyPicker({ match, onPick, style }) {
+  const m = match;
+  const tie = m.round && m.a && m.b
+    && Number.isFinite(Number(m.scoreA)) && Number.isFinite(Number(m.scoreB))
+    && Number(m.scoreA) === Number(m.scoreB);
+  if (!tie) return null;
+  return (
+    <div style={{ marginTop:8, display:"flex", alignItems:"center", gap:8, flexWrap:"wrap", ...(style||{}) }}>
+      <span style={{ fontSize:10, color:"var(--char-400)", letterSpacing:"0.12em", fontWeight:700 }}>¿QUIÉN AVANZÓ?</span>
+      {[m.a, m.b].map((code) => (
+        <button key={code} onClick={() => onPick(code)} style={{
+          padding:"4px 10px", borderRadius:999, cursor:"pointer",
+          border:`1px solid ${m.advances === code ? "var(--neon-citrus)" : "var(--char-600)"}`,
+          background: m.advances === code ? "var(--neon-citrus)" : "transparent",
+          color: m.advances === code ? "var(--char-900)" : "var(--cream-100)",
+          fontSize:11, fontWeight:700, fontFamily:"var(--font-body)",
+          display:"inline-flex", alignItems:"center", gap:5,
+        }}>
+          <Flag code={code} size={14}/>{window.TEAMS[code]}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /* ---------- NumStepper ---------- */
 function NumStepper({ value, onChange, disabled }) {
   return (
